@@ -48,24 +48,58 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS configuration per Section 30 & Module 12 Deployment
-origins = settings.cors_origins
+# CORS configuration with strict explicit allowlist (No wildcard allowed with credentials)
+configured_origins = settings.cors_origins
 if settings.ENVIRONMENT == "development":
-    if not origins or "http://localhost:3000" not in origins:
-        origins = ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"]
+    dev_defaults = ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"]
+    origins = list(dict.fromkeys(configured_origins + dev_defaults))
+else:
+    origins = configured_origins
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.ENVIRONMENT == "development" else origins,
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
 )
 
-# Mount local storage folder for uploaded files
+# Public vs Private Asset Separation
 STORAGE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "storage")
-os.makedirs(STORAGE_DIR, exist_ok=True)
-app.mount("/storage", StaticFiles(directory=STORAGE_DIR), name="storage")
+AVATARS_DIR = os.path.join(STORAGE_DIR, "avatars")
+LOGOS_DIR = os.path.join(STORAGE_DIR, "company-logos")
+RESUMES_DIR = os.path.join(STORAGE_DIR, "resumes")
+CERTS_DIR = os.path.join(STORAGE_DIR, "certificates")
+
+os.makedirs(AVATARS_DIR, exist_ok=True)
+os.makedirs(LOGOS_DIR, exist_ok=True)
+os.makedirs(RESUMES_DIR, exist_ok=True)
+os.makedirs(CERTS_DIR, exist_ok=True)
+
+# Mount public assets strictly to their specific subpaths
+app.mount("/storage/avatars", StaticFiles(directory=AVATARS_DIR), name="public_avatars")
+app.mount("/storage/company-logos", StaticFiles(directory=LOGOS_DIR), name="public_company_logos")
+
+# Explicit security block: Private user documents must never be accessible via static file mounts
+@app.get("/storage/resumes/{path:path}", include_in_schema=False)
+def block_direct_static_resumes(path: str):
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail={
+            "code": "FORBIDDEN",
+            "message": "Direct static access to private candidate documents is prohibited. Use authenticated endpoint /api/upload/resumes/{file_id}."
+        }
+    )
+
+@app.get("/storage/certificates/{path:path}", include_in_schema=False)
+def block_direct_static_certificates(path: str):
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail={
+            "code": "FORBIDDEN",
+            "message": "Direct static access to private certificates is prohibited. Use authenticated verification endpoints."
+        }
+    )
 
 # Include all modular routers
 from backend.app.routers import (

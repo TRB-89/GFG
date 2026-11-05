@@ -23,41 +23,70 @@ from backend.app.models.user import Profile
 from backend.app.models.company import Company
 from backend.app.models.job import Job
 from backend.app.models.application import Application
-from backend.app.middleware.auth_middleware import get_optional_user
+from backend.app.middleware.auth_middleware import get_current_user
 
 router = APIRouter(prefix="/api/employer", tags=["Employer Intelligence & Returnship Toolkit"])
 
 # ============================================================================
-# ACTOR / AUTH DEPENDENCY
+# ACTOR / AUTH DEPENDENCY & TENANT BOUNDARIES
 # ============================================================================
 
 def get_employer_actor(
-    current_user: Optional[Profile] = Depends(get_optional_user),
+    current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> Profile:
     """
-    Enforces employer/admin authorization while seamlessly supporting
-    the designated demo employer workspace when no session bearer token is provided.
+    Enforces strict employer/admin authorization.
+    Requires an authenticated user with role == 'employer' or 'admin'.
+    Returns 401 for unauthenticated requests and 403 for unauthorized access.
+    Fails closed: NO unauthenticated fallback.
     """
-    if current_user:
-        if current_user.role not in ["employer", "admin"]:
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "UNAUTHORIZED", "message": "Authentication required. Please log in as an employer."}
+        )
+    if current_user.role not in ["employer", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "FORBIDDEN", "message": "Access restricted. Employer credentials required."}
+        )
+    return current_user
+
+def get_authorized_employer_company(
+    current_user: Profile,
+    db: Session,
+    requested_company_name: Optional[str] = None
+) -> Company:
+    """
+    Resolves the company record explicitly linked to the authenticated employer.
+    Validates tenant ownership: caller can only access their own linked company.
+    If requested_company_name is provided, it must match the employer's company.
+    Fails closed with 403 if no company is linked or if attempting cross-tenant access.
+    """
+    comp = db.query(Company).filter(Company.owner_user_id == current_user.id).first()
+    
+    # If admin without an owned company, allow explicit name lookup
+    if not comp and current_user.role == "admin" and requested_company_name:
+        comp = db.query(Company).filter(Company.name.ilike(f"%{requested_company_name.strip()}%")).first()
+
+    if not comp:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "NO_LINKED_COMPANY", "message": "Access denied. No authorized employer organization is linked to your account."}
+        )
+
+    # Check tenant boundary if a specific company name was requested
+    if requested_company_name and current_user.role != "admin":
+        req_clean = requested_company_name.strip().lower()
+        comp_clean = comp.name.strip().lower()
+        if req_clean not in comp_clean and comp_clean not in req_clean:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail={"code": "FORBIDDEN", "message": "Access restricted. Employer or Admin credentials required."}
+                detail={"code": "TENANT_ACCESS_DENIED", "message": f"Access denied. You do not own or manage organization '{requested_company_name}'."}
             )
-        return current_user
-    
-    # Fallback to existing employer in DB or default fictional demo profile
-    demo_emp = db.query(Profile).filter(Profile.role == "employer").first()
-    if demo_emp:
-        return demo_emp
-    
-    return Profile(
-        id="usr-demo-novatech-hr",
-        email="hr@novatech.com",
-        full_name="Nova Tech HR Desk",
-        role="employer"
-    )
+
+    return comp
 
 def response_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     """Helper to return consistent success dictionary compatible with frontend & pytest."""
@@ -144,6 +173,7 @@ class ReturnshipCreateRequest(BaseModel):
         return "hybrid"
 
 class AdvanceApplicationRequest(BaseModel):
+    company_name: Optional[str] = None
     new_status: str = Field(..., description="'reviewing', 'shortlisted', 'interview_scheduled', 'offer_extended', 'onboarded', 'rejected'")
     interview_date: Optional[str] = None
     reviewer_name: Optional[str] = None
@@ -285,40 +315,7 @@ def get_employer_profile(
     db: Session = Depends(get_db)
 ):
     """Returns organization profile details, verification status, and charter commitments."""
-    comp = None
-    if company_name:
-        if "nova" in company_name.lower():
-            # Explicit request for demo organization
-            pass
-        else:
-            comp = db.query(Company).filter(Company.name.ilike(f"%{company_name}%")).first()
-    elif current_user:
-        comp = db.query(Company).filter(Company.owner_user_id == current_user.id).first()
-
-    if not comp:
-        # Fictional employer demo workspace fallback for Nova Technologies
-        profile_data = {
-            "is_demo_workspace": True,
-            "organization_id": "comp-nova-demo",
-            "name": "Nova Technologies",
-            "display_name": "Nova Technologies (Fictional Demo Workspace)",
-            "website": "https://novatech-demo.example.com",
-            "authorized_representative": "Pooja Hegde (Director of People & Talent)",
-            "business_contact_email": "talent@novatech.com",
-            "industry": "Cloud Infrastructure & Enterprise Intelligence",
-            "location": "Bengaluru, IN (Hybrid)",
-            "company_size": "250-500 employees",
-            "verification_status": "verified",
-            "is_verified": True,
-            "verified": True,
-            "hiring_charter_accepted": True,
-            "team_roles": [
-                {"name": "Pooja Hegde", "role": "Organization Admin", "email": "p.hegde@novatech.com"},
-                {"name": "Nova Tech HR Desk", "role": "Lead Recruiter", "email": "hr@novatech.com"},
-                {"name": "Dr. Anand Rao", "role": "Returnship Mentor", "email": "a.rao@novatech.com"}
-            ]
-        }
-        return response_payload({"profile": profile_data, **profile_data})
+    comp = get_authorized_employer_company(current_user, db, company_name)
 
     profile_data = {
         "is_demo_workspace": False,
@@ -353,25 +350,19 @@ def get_employer_workspace_dashboard(
     Provides organization-specific pipeline metrics and returns active returnship records.
     Uses real organization data where available, or fictional demo data in demo mode.
     """
-    comp = None
-    if company_name:
-        comp = db.query(Company).filter(Company.name.ilike(f"%{company_name}%")).first()
-    if not comp:
-        comp = db.query(Company).filter(Company.owner_user_id == current_user.id).first()
+    comp = get_authorized_employer_company(current_user, db, company_name)
 
-    jobs: List[Job] = []
+    jobs: List[Job] = db.query(Job).filter(Job.company_id == comp.id).order_by(Job.created_at.desc()).all()
+    job_ids = [j.id for j in jobs]
     apps: List[Application] = []
-    if comp:
-        jobs = db.query(Job).filter(Job.company_id == comp.id).order_by(Job.created_at.desc()).all()
-        job_ids = [j.id for j in jobs]
-        if job_ids:
-            apps = db.query(Application).filter(Application.job_id.in_(job_ids)).order_by(Application.applied_at.desc()).all()
+    if job_ids:
+        apps = db.query(Application).filter(Application.job_id.in_(job_ids)).order_by(Application.applied_at.desc()).all()
 
-    active_jobs_count = len([j for j in jobs if j.status == "active"]) if jobs else 3
-    total_apps = len(apps) if apps else 18
-    interviews_count = len([a for a in apps if a.status in ["interview", "interview_scheduled"]]) if apps else 6
-    offers_count = len([a for a in apps if a.status in ["selected", "offer_extended"]]) if apps else 3
-    onboarded_count = len([a for a in apps if a.status == "onboarded"]) if apps else 2
+    active_jobs_count = len([j for j in jobs if j.status == "active"])
+    total_apps = len(apps)
+    interviews_count = len([a for a in apps if a.status in ["interview", "interview_scheduled"]])
+    offers_count = len([a for a in apps if a.status in ["selected", "offer_extended"]])
+    onboarded_count = len([a for a in apps if a.status == "onboarded"])
 
     dashboard_metrics = {
         "active_opportunities": active_jobs_count,
@@ -449,8 +440,8 @@ def get_employer_workspace_dashboard(
     ]
 
     return response_payload({
-        "organization_name": comp.name if comp else "Nova Technologies (Fictional Demo Workspace)",
-        "is_verified": bool(comp.verified) if comp else True,
+        "organization_name": comp.name,
+        "is_verified": bool(comp.verified),
         "dashboard_metrics": dashboard_metrics,
         "pipeline_summary": dashboard_metrics,
         "returnship_cohorts": returnship_cohorts,
@@ -475,6 +466,7 @@ def get_consented_candidates(
     Optional career-break reasons remain masked unless disclosed by candidate.
     Candidates can unconditionally revoke employer access at any time.
     """
+    comp = get_authorized_employer_company(current_user, db, company_name)
     candidates = [
         {
             "candidate_id": "cand-demo-ananya",
@@ -680,29 +672,10 @@ def create_returnship_program(
     db: Session = Depends(get_db)
 ):
     """
-    Enables approved employers to create structured returnship opportunities with transparent compensation,
-    learning objectives, mentor assignments, and progression pathways.
+    Enforces tenant authorization and enables approved employers to create structured returnship opportunities
+    with transparent compensation, learning objectives, mentor assignments, and progression pathways.
     """
-    comp = None
-    if payload.company_name:
-        comp = db.query(Company).filter(Company.name.ilike(f"%{payload.company_name}%")).first()
-    if not comp:
-        comp = db.query(Company).filter(Company.owner_user_id == current_user.id).first()
-    
-    if not comp:
-        comp = Company(
-            owner_user_id=current_user.id,
-            name=payload.company_name or "Nova Technologies",
-            industry="Software & IT",
-            website="https://novatech-demo.example.com",
-            location=payload.location,
-            verified=True,
-            verification_status="verified",
-            hiring_charter_accepted=True
-        )
-        db.add(comp)
-        db.commit()
-        db.refresh(comp)
+    comp = get_authorized_employer_company(current_user, db, payload.company_name)
 
     # Format learning objectives and evaluation criteria as string if list
     learn_str = "\n".join(payload.learning_objectives) if isinstance(payload.learning_objectives, list) else str(payload.learning_objectives)
@@ -894,14 +867,10 @@ def get_employer_analytics(
     Returns verified organization metrics with defined formulas.
     Avoids unverified diversity or cost-saving claims.
     """
-    comp = None
-    if company_name:
-        comp = db.query(Company).filter(Company.name.ilike(f"%{company_name}%")).first()
-    if not comp:
-        comp = db.query(Company).filter(Company.owner_user_id == current_user.id).first()
+    comp = get_authorized_employer_company(current_user, db, company_name)
 
     analytics_data = {
-        "organization_name": comp.name if comp else "Nova Technologies (Fictional Demo Workspace)",
+        "organization_name": comp.name,
         "total_applications": 24,
         "interview_conversion_rate_percent": 33.3,
         "offer_conversion_rate_percent": 62.5,
@@ -975,9 +944,17 @@ def advance_application_stage(
 ):
     """
     Advances candidate stage in pipeline with audit trail logging.
+    Enforces tenant boundaries: employer can only advance applications to their own opportunities.
     """
+    comp = get_authorized_employer_company(current_user, db, payload.company_name)
+
     app = db.query(Application).filter(Application.id == str(application_id)).first()
-    if app:
+    if app and app.job:
+        if app.job.company_id != comp.id and current_user.role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"code": "TENANT_ACCESS_DENIED", "message": "Access denied. You do not own the opportunity associated with this application."}
+            )
         app.status = payload.new_status
         db.commit()
 
@@ -1010,7 +987,9 @@ def get_employer_audit_logs(
     """
     Returns security audit log of employer actions and candidate consent verifications.
     """
+    comp = get_authorized_employer_company(current_user, db, company_name)
     return response_payload({
+        "organization_name": comp.name,
         "total_logs": len(AUDIT_LOGS),
         "audit_logs": list(reversed(AUDIT_LOGS))
     })

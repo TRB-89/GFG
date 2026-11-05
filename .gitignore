@@ -23,14 +23,28 @@ ENV/
 htmlcov/
 
 # Local databases & caches
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
 *.sqlite3
 *.db-journal
 .system_generated/
 
+# Private user uploads & secure documents (never track in VCS)
+backend/storage/resumes/
+backend/storage/certificates/
+storage/resumes/
+storage/certificates/
+
 # Environment files & secrets
 .env
+.env.*
+*.env
 backend/.env
-.env.local
+backend/.env.*
+my-website/.env.local
+my-website/.env.*.local
 .env.development.local
 .env.test.local
 .env.production.local

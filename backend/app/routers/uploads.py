@@ -23,6 +23,12 @@ async def upload_resume(
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    if current_user.role not in ["candidate", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "FORBIDDEN", "message": "Only candidates can upload personal resumes."}
+        )
+
     # Validate PDF only
     filename = file.filename or ""
     if not (filename.lower().endswith(".pdf") or file.content_type == "application/pdf"):
@@ -33,7 +39,8 @@ async def upload_resume(
     if len(content) > 5 * 1024 * 1024:
         return error_response("FILE_TOO_LARGE", "Resume file exceeds maximum limit of 5 MB.")
 
-    file_id = f"{uuid.uuid4()}_{filename.replace(' ', '_')}"
+    safe_filename = os.path.basename(filename).replace(" ", "_").replace("/", "").replace("\\", "")
+    file_id = f"{uuid.uuid4().hex}_{safe_filename}"
     target_path = os.path.join(STORAGE_ROOT, "resumes", file_id)
     with open(target_path, "wb") as f:
         f.write(content)
@@ -70,6 +77,12 @@ async def get_secure_resume(
     (the candidate themselves, vetted employers with active applications or consent, or admins)
     can access uploaded resumes.
     """
+    if not file_id or ".." in file_id or "/" in file_id or "\\" in file_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "INVALID_PATH", "message": "Invalid document identifier."}
+        )
+
     clean_id = os.path.basename(file_id).replace("..", "").replace("/", "").replace("\\", "")
     target_path = os.path.join(STORAGE_ROOT, "resumes", clean_id)
 
