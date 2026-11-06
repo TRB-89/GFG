@@ -44,6 +44,8 @@ class JobBase(BaseModel):
 class JobCreate(JobBase):
     required_skill_ids: List[str] = []
     preferred_skill_ids: List[str] = []
+    required_skills: Optional[List[str]] = []
+    preferred_skills: Optional[List[str]] = []
 
 class JobUpdate(BaseModel):
     title: Optional[str] = None

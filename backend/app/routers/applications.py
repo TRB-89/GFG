@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.app.database.database import get_db
@@ -11,6 +12,21 @@ from backend.app.middleware.auth_middleware import require_role
 from backend.app.services.matching_service import compute_compatibility_score
 
 router = APIRouter(tags=["Applications"])
+
+ALLOWED_TRANSITIONS = {
+    "submitted": {"under_review", "shortlisted", "interview", "interview_scheduled", "rejected", "withdrawn"},
+    "under_review": {"interview", "interview_scheduled", "offer", "offer_extended", "selected", "rejected", "withdrawn"},
+    "shortlisted": {"interview", "interview_scheduled", "offer", "offer_extended", "selected", "rejected", "withdrawn"},
+    "interview": {"offer", "offer_extended", "selected", "hired", "onboarded", "rejected", "withdrawn"},
+    "interview_scheduled": {"interview", "offer", "offer_extended", "selected", "hired", "onboarded", "rejected", "withdrawn"},
+    "offer": {"hired", "onboarded", "rejected", "withdrawn"},
+    "offer_extended": {"hired", "onboarded", "rejected", "withdrawn"},
+    "selected": {"hired", "onboarded", "rejected", "withdrawn"},
+    "hired": {"withdrawn"},
+    "onboarded": {"withdrawn"},
+    "rejected": {"under_review", "withdrawn"},
+    "withdrawn": set()
+}
 
 def format_application(app: Application) -> dict:
     compat_score = None
@@ -35,6 +51,7 @@ def format_application(app: Application) -> dict:
         "cover_note": app.cover_note,
         "resume_url": app.resume_url or (app.candidate.resume_url if app.candidate else None),
         "compatibility_score": compat_score,
+        "status_history": app.status_history or [],
         "applied_at": app.applied_at.isoformat(),
         "updated_at": app.updated_at.isoformat()
     }
@@ -54,10 +71,16 @@ def apply_to_job(
 
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
-        return error_response("JOB_NOT_FOUND", "The requested opportunity could not be found.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "JOB_NOT_FOUND", "message": "The requested opportunity could not be found."}
+        )
 
     if job.status != "active":
-        return error_response("JOB_INACTIVE", "This opportunity is no longer accepting applications.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "JOB_INACTIVE", "message": "This opportunity is no longer accepting applications."}
+        )
 
     # Section 33: Duplicate application prevention
     existing = db.query(Application).filter(
@@ -66,14 +89,25 @@ def apply_to_job(
     ).first()
 
     if existing:
-        return error_response("DUPLICATE_APPLICATION", "You have already applied for this opportunity.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "DUPLICATE_APPLICATION", "message": "You have already applied for this opportunity."}
+        )
 
+    now_iso = datetime.now(timezone.utc).isoformat()
     new_app = Application(
         candidate_id=cand.id,
         job_id=job.id,
         status="submitted",
         cover_note=req.cover_note,
-        resume_url=req.resume_url or cand.resume_url
+        resume_url=req.resume_url or cand.resume_url,
+        status_history=[{
+            "from_status": None,
+            "to_status": "submitted",
+            "changed_by": current_user.full_name or "Candidate",
+            "changed_at": now_iso,
+            "notes": "Application voluntarily submitted by candidate."
+        }]
     )
     db.add(new_app)
     db.commit()
@@ -116,10 +150,16 @@ def get_job_applications(
 ):
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
-        return error_response("JOB_NOT_FOUND", "Opportunity not found.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "JOB_NOT_FOUND", "message": "Opportunity not found."}
+        )
 
     if current_user.role != "admin" and job.company.owner_user_id != current_user.id:
-        return error_response("FORBIDDEN", "You can only view applications for your company's opportunities.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "FORBIDDEN", "message": "You can only view applications for your company's opportunities."}
+        )
 
     apps = db.query(Application).filter(Application.job_id == job_id).order_by(Application.applied_at.desc()).all()
     return success_response([format_application(a) for a in apps])
@@ -133,13 +173,42 @@ def update_application_status(
 ):
     app = db.query(Application).filter(Application.id == application_id).first()
     if not app:
-        return error_response("APPLICATION_NOT_FOUND", "Application record not found.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "APPLICATION_NOT_FOUND", "message": "Application record not found."}
+        )
 
     # Authorization: Employer can only update applications to their own company's jobs
     if current_user.role != "admin" and app.job.company.owner_user_id != current_user.id:
-        return error_response("FORBIDDEN", "You do not have permission to manage this application.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "FORBIDDEN", "message": "You do not have permission to manage this application."}
+        )
 
-    app.status = req.status
+    new_status = req.status.lower()
+    current_status = app.status
+
+    if current_user.role != "admin":
+        allowed = ALLOWED_TRANSITIONS.get(current_status, set())
+        if new_status not in allowed and new_status != current_status:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "code": "INVALID_STATE_TRANSITION",
+                    "message": f"Cannot transition application from '{current_status}' to '{new_status}'."
+                }
+            )
+
+    history = list(app.status_history or [])
+    history.append({
+        "from_status": current_status,
+        "to_status": new_status,
+        "changed_by": current_user.full_name or current_user.email,
+        "changed_at": datetime.now(timezone.utc).isoformat(),
+        "notes": req.notes or f"Application status advanced to '{new_status}'."
+    })
+    app.status_history = history
+    app.status = new_status
     db.commit()
     db.refresh(app)
 
@@ -166,6 +235,16 @@ def withdraw_application(
     if app.status in ["withdrawn", "closed"]:
         return error_response("ALREADY_WITHDRAWN", f"Application is already marked as {app.status}.")
 
+    current_status = app.status
+    history = list(app.status_history or [])
+    history.append({
+        "from_status": current_status,
+        "to_status": "withdrawn",
+        "changed_by": current_user.full_name or "Candidate",
+        "changed_at": datetime.now(timezone.utc).isoformat(),
+        "notes": "Application voluntarily withdrawn by candidate."
+    })
+    app.status_history = history
     app.status = "withdrawn"
     db.commit()
     db.refresh(app)

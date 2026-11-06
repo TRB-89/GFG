@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, Boolean, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from backend.app.models.base import Base, generate_uuid, utc_now
 
@@ -17,11 +17,15 @@ class Company(Base):
     authorized_representative = Column(String(255), nullable=True)
     business_contact_email = Column(String(255), nullable=True)
     business_contact_phone = Column(String(50), nullable=True)
-    verification_status = Column(String(50), default="pending_review") # pending_review, under_audit, verified, rejected
+    verification_status = Column(String(50), default="pending") # pending, verified, rejected, suspended
+    verification_notes = Column(Text, nullable=True)
+    verified_by_user_id = Column(String(36), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True)
+    verified_at = Column(DateTime, nullable=True)
+    compliance_checklist = Column(JSON, nullable=True)
     hiring_charter_accepted = Column(Boolean, default=False)
     verified = Column(Boolean, default=False) # Employer registration must not automatically grant verified status
     created_at = Column(DateTime, default=utc_now)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
-    owner = relationship("Profile", back_populates="companies")
+    owner = relationship("Profile", foreign_keys=[owner_user_id], back_populates="companies")
     jobs = relationship("Job", back_populates="company", cascade="all, delete-orphan")

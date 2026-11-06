@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from datetime import date, datetime
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -123,14 +123,14 @@ class CandidateProfileResponse(BaseModel):
 class ProjectCreate(BaseModel):
     title: str
     description: Optional[str] = None
-    technologies: Optional[str] = None
+    technologies: Optional[Union[str, List[str]]] = None
     technologies_used: Optional[List[str]] = None
     project_url: Optional[str] = None
     project_link: Optional[str] = None
     github_url: Optional[str] = None
     repository_link: Optional[str] = None
     year_completed: Optional[int] = None
-    skills_demonstrated: Optional[str] = None
+    skills_demonstrated: Optional[Union[str, List[str]]] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 

@@ -21,4 +21,4 @@ class Profile(Base):
 
     # Relationships
     candidate_profile = relationship("CandidateProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    companies = relationship("Company", back_populates="owner", cascade="all, delete-orphan")
+    companies = relationship("Company", back_populates="owner", cascade="all, delete-orphan", foreign_keys="Company.owner_user_id")

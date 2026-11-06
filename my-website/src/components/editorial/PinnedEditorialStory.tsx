@@ -192,7 +192,7 @@ export function PinnedEditorialStory({
           </div>
 
           <div className="text-[11px] font-mono text-[#A89B90] tracking-widest hidden sm:block">
-            CHAPTER {currentPanel.chapterNumber} // 05
+            {`CHAPTER ${currentPanel.chapterNumber} // 05`}
           </div>
         </div>
 

@@ -1,4 +1,6 @@
 import os
+import time
+import uuid
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, status
@@ -61,8 +63,30 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With", "X-Request-ID"],
+    expose_headers=["X-Request-ID"],
 )
+
+@app.middleware("http")
+async def request_id_and_logging_middleware(request: Request, call_next):
+    # Extract existing or generate fresh X-Request-ID
+    req_id = request.headers.get("X-Request-ID")
+    if not req_id:
+        req_id = str(uuid.uuid4())
+    request.state.request_id = req_id
+
+    start_time = time.perf_counter()
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        logger.error(f"[{req_id}] {request.method} {request.url.path} EXCEPTION after {duration_ms:.2f}ms: {type(exc).__name__}")
+        raise exc
+
+    duration_ms = (time.perf_counter() - start_time) * 1000
+    response.headers["X-Request-ID"] = req_id
+    logger.info(f"[{req_id}] {request.method} {request.url.path} -> {response.status_code} ({duration_ms:.2f}ms)")
+    return response
 
 # Public vs Private Asset Separation
 STORAGE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "storage")
@@ -127,6 +151,7 @@ from backend.app.routers import (
     privacy,
     responsible_ai,
     learning,
+    personalization,
 )
 
 app.include_router(auth.router)
@@ -153,10 +178,12 @@ app.include_router(government_pilot.router)
 app.include_router(privacy.router)
 app.include_router(responsible_ai.router)
 app.include_router(learning.router)
+app.include_router(personalization.router)
 
 # Global Exception Handlers per Section 21 & 22
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
+    req_id = getattr(request.state, "request_id", None)
     code = "HTTP_ERROR"
     message = str(exc.detail)
     details = None
@@ -164,33 +191,50 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         code = exc.detail.get("code", "ERROR")
         message = exc.detail.get("message", "An error occurred.")
         details = exc.detail.get("details", None)
-    return JSONResponse(
+    response = JSONResponse(
         status_code=exc.status_code,
-        content=error_response(code, message, details)
+        content=error_response(code, message, details, request_id=req_id)
     )
+    if req_id:
+        response.headers["X-Request-ID"] = req_id
+    return response
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    req_id = getattr(request.state, "request_id", None)
     errors = exc.errors()
-    return JSONResponse(
+    response = JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=error_response(
             "VALIDATION_ERROR",
             "Submitted input parameters failed validation constraints.",
-            details=[{"field": ".".join(str(l) for l in err["loc"]), "msg": err["msg"]} for err in errors]
+            details=[{"field": ".".join(str(l) for l in err["loc"]), "msg": err["msg"]} for err in errors],
+            request_id=req_id
         )
     )
+    if req_id:
+        response.headers["X-Request-ID"] = req_id
+    return response
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled exception during {request.method} {request.url.path}: {str(exc)}", exc_info=True)
-    return JSONResponse(
+    req_id = getattr(request.state, "request_id", None) or str(uuid.uuid4())
+    logger.error(f"[{req_id}] Unhandled exception during {request.method} {request.url.path}: {str(exc)}", exc_info=True)
+    response = JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=error_response(
             "INTERNAL_SERVER_ERROR",
-            "An internal error occurred. Please contact platform administrators."
+            "An internal error occurred. Please contact platform administrators.",
+            request_id=req_id
         )
     )
+    response.headers["X-Request-ID"] = req_id
+    return response
+
+@app.get("/api/test-internal-error", include_in_schema=False)
+def trigger_test_internal_error():
+    """Endpoint specifically for testing non-leaking 500 error handling."""
+    raise RuntimeError("Simulated internal error for backend reliability testing")
 
 @app.get("/health", tags=["System"])
 @app.get("/api/health", tags=["System"])

@@ -26,7 +26,12 @@ class LearningRoadmap(Base):
     candidate_id = Column(String(36), ForeignKey("candidate_profiles.id", ondelete="CASCADE"), nullable=False, index=True)
     target_role = Column(String(100), nullable=False)
     roadmap = Column(JSON, nullable=False)
-    status = Column(String(50), default="active") # active, archived, completed
+    variant = Column(String(50), default="employment") # employment, upskilling, freelancing, entrepreneurship
+    pace = Column(String(50), default="steady") # steady, accelerator, relaxed
+    weeks_data = Column(JSON, nullable=True) # full 8-week structured roadmap
+    completed_task_ids = Column(JSON, nullable=True) # list of completed task IDs
+    is_paused = Column(Boolean, default=False)
+    status = Column(String(50), default="active") # active, archived, completed, paused
     generated_at = Column(DateTime, default=utc_now)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 

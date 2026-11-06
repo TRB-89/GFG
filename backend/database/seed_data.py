@@ -256,9 +256,13 @@ def seed_community_data(db):
     db.commit()
     print("Module 8 Mentors and Comeback Circles seeded successfully.")
 
-def seed_database():
+def seed_database(db=None):
     init_db()
-    db = SessionLocal()
+    should_close = False
+    if db is None:
+        import backend.app.database.database as db_mod
+        db = db_mod.SessionLocal()
+        should_close = True
 
     # Ensure admin user exists
     admin_prof = db.query(Profile).filter(Profile.email == "admin@gfg.org").first()
@@ -1065,7 +1069,8 @@ def seed_database():
         github_url="https://github.com/priyasharma-demo",
         portfolio_url="https://priyasharma.me",
         return_readiness_status="active",
-        career_break_visibility="employers"
+        career_break_visibility="employers",
+        onboarding_completed=True
     )
     db.add(priya_cand)
     db.flush()
@@ -1322,7 +1327,8 @@ def seed_database():
         db.add(app)
 
     db.commit()
-    db.close()
+    if should_close:
+        db.close()
     print("Database seeding completed successfully!")
 
 if __name__ == "__main__":

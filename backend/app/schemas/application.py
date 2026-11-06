@@ -7,7 +7,8 @@ class ApplicationCreate(BaseModel):
     resume_url: Optional[str] = None
 
 class ApplicationStatusUpdate(BaseModel):
-    status: str = Field(..., pattern="^(submitted|under_review|shortlisted|interview|selected|rejected|withdrawn)$")
+    status: str = Field(..., pattern="^(submitted|under_review|shortlisted|interview|interview_scheduled|offer|offer_extended|selected|hired|onboarded|rejected|withdrawn)$")
+    notes: Optional[str] = None
 
 class ApplicationResponse(BaseModel):
     id: str

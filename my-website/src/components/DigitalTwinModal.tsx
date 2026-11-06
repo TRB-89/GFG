@@ -63,12 +63,6 @@ export function DigitalTwinModal({
   const [expandedPathwayIndex, setExpandedPathwayIndex] = useState<number>(0);
   const [selectedGraphNode, setSelectedGraphNode] = useState<any | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadDigitalTwinData();
-    }
-  }, [isOpen, selectedRole]);
-
   const loadDigitalTwinData = async () => {
     setIsLoading(true);
     setFeedback(null);
@@ -98,6 +92,14 @@ export function DigitalTwinModal({
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      queueMicrotask(() => {
+        void loadDigitalTwinData();
+      });
+    }
+  }, [isOpen, selectedRole]);
 
   // Recalibrate twin dynamically
   const handleRecalibrate = async () => {

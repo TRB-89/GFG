@@ -233,14 +233,18 @@ export function LearningHubModal({
 
   useEffect(() => {
     if (isOpen) {
-      loadCatalogue();
+      queueMicrotask(() => {
+        loadCatalogue();
+      });
     }
   }, [isOpen, searchQuery, selectedCategory]);
 
   useEffect(() => {
     if (initialCourseSlug && isOpen) {
-      loadCourseDetail(initialCourseSlug);
-      setActiveTab("course_detail");
+      queueMicrotask(() => {
+        loadCourseDetail(initialCourseSlug);
+        setActiveTab("course_detail");
+      });
     }
   }, [initialCourseSlug, isOpen]);
 
@@ -1345,7 +1349,7 @@ export function LearningHubModal({
                     {assignmentData.user_submission.evaluator_feedback && (
                       <div className="pt-2 border-t border-white/5 text-[#AAAAAA]">
                         <span className="text-[#D8C2A6] block mb-1">Evaluator Feedback:</span>
-                        <p className="italic font-sans">"{assignmentData.user_submission.evaluator_feedback}"</p>
+                        <p className="italic font-sans">&ldquo;{assignmentData.user_submission.evaluator_feedback}&rdquo;</p>
                       </div>
                     )}
                   </div>
@@ -1584,7 +1588,7 @@ export function LearningHubModal({
 
                         {/* Submission Content */}
                         <div className="p-4 rounded-xl bg-[#111111] text-xs text-[#CCCCCC] space-y-2">
-                          <p className="leading-relaxed">"{sub.submission_content}"</p>
+                          <p className="leading-relaxed">&ldquo;{sub.submission_content}&rdquo;</p>
                           {sub.external_url && (
                             <a
                               href={sub.external_url}

@@ -1,11 +1,34 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useId } from "react";
 import { Play, Volume2, ShieldCheck, ExternalLink, AlertCircle } from "lucide-react";
+
+interface YTPlayerInstance {
+  destroy: () => void;
+  playVideo?: () => void;
+  pauseVideo?: () => void;
+  stopVideo?: () => void;
+}
+
+interface YTPlayerEvent {
+  target: YTPlayerInstance;
+  data: number;
+}
 
 declare global {
   interface Window {
-    YT: any;
+    YT: {
+      Player: new (
+        elementId: string,
+        options: {
+          events: {
+            onReady?: (event: YTPlayerEvent) => void;
+            onStateChange?: (event: YTPlayerEvent) => void;
+            onError?: (event: YTPlayerEvent) => void;
+          };
+        }
+      ) => YTPlayerInstance;
+    };
     onYouTubeIframeAPIReady: () => void;
   }
 }
@@ -16,8 +39,8 @@ interface YouTubePlayerProps {
   autoplay?: boolean;
   height?: string | number;
   width?: string | number;
-  onPlayerReady?: (event: any) => void;
-  onPlayerStateChange?: (event: any) => void;
+  onPlayerReady?: (event: YTPlayerEvent) => void;
+  onPlayerStateChange?: (event: YTPlayerEvent) => void;
   onEnded?: () => void;
 }
 
@@ -64,25 +87,17 @@ export function YouTubePlayer({
   onPlayerStateChange,
   onEnded,
 }: YouTubePlayerProps) {
-  const containerId = useRef(`yt-player-${Math.random().toString(36).substring(2, 9)}`);
-  const playerRef = useRef<any>(null);
+  const generatedId = useId();
+  const containerId = `yt-player-${generatedId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const playerRef = useRef<YTPlayerInstance | null>(null);
   const [isReady, setIsReady] = useState<boolean>(false);
-  const [hasError, setHasError] = useState<boolean>(false);
+  const [hasPlaybackError, setHasPlaybackError] = useState<boolean>(false);
   const videoId = extractYouTubeId(videoUrlOrId);
 
-  const [origin, setOrigin] = useState<string>("");
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setOrigin(window.location.origin);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!videoId) {
-      setHasError(true);
-      return;
-    }
+    if (!videoId) return;
 
     let isMounted = true;
 
@@ -97,13 +112,13 @@ export function YouTubePlayer({
         }
 
         // Attach YT.Player to the existing iframe element
-        playerRef.current = new window.YT.Player(containerId.current, {
+        playerRef.current = new window.YT.Player(containerId, {
           events: {
-            onReady: (event: any) => {
+            onReady: (event: YTPlayerEvent) => {
               if (isMounted) setIsReady(true);
               if (onPlayerReady) onPlayerReady(event);
             },
-            onStateChange: (event: any) => {
+            onStateChange: (event: YTPlayerEvent) => {
               if (onPlayerStateChange) onPlayerStateChange(event);
               // YT.PlayerState.ENDED is 0
               if (event.data === 0 && onEnded) {
@@ -111,7 +126,7 @@ export function YouTubePlayer({
               }
             },
             onError: () => {
-              if (isMounted) setHasError(true);
+              if (isMounted) setHasPlaybackError(true);
             },
           },
         });
@@ -148,7 +163,7 @@ export function YouTubePlayer({
         } catch {}
       }
     };
-  }, [videoId, onPlayerReady, onPlayerStateChange, onEnded]);
+  }, [videoId, containerId, onPlayerReady, onPlayerStateChange, onEnded]);
 
   if (!videoId) {
     return null;
@@ -167,7 +182,7 @@ export function YouTubePlayer({
 
         {/* Direct HTML IFrame Player with enablejsapi=1 */}
         <iframe
-          id={containerId.current}
+          id={containerId}
           title={title}
           width={width || "640"}
           height={height || "390"}
@@ -179,7 +194,7 @@ export function YouTubePlayer({
         />
 
         {/* Fallback if embedded playback is restricted by network/CSP */}
-        {hasError && (
+        {hasPlaybackError && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#141414] text-center p-6 space-y-3 z-20">
             <AlertCircle className="w-8 h-8 text-[#A56F7C]" />
             <div className="text-sm font-serif text-[#F1E7DB]">
@@ -192,7 +207,7 @@ export function YouTubePlayer({
               href={`https://www.youtube.com/watch?v=${videoId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#D8C2A6] text-[#111111] text-xs font-mono font-bold hover:bg-[#F1E7DB] transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#D8C2A6] text-[#111111] text-xs font-semibold hover:bg-[#F1E7DB] transition-colors"
             >
               <span>Watch on YouTube</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -201,21 +216,28 @@ export function YouTubePlayer({
         )}
       </div>
 
-      {/* Video Caption & Metadata Strip */}
-      <div className="flex items-center justify-between px-1 text-[11px] font-mono text-[#888888]">
+      {/* Trust & Playback Indicator */}
+      <div className="flex items-center justify-between px-2 text-[11px] text-[#888888] font-mono">
         <div className="flex items-center gap-2">
-          <Play className="w-3 h-3 text-[#A56F7C]" />
-          <span className="text-[#D8C2A6] font-medium">{title}</span>
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+          <span>Official GFG Educational Stream (YouTube IFrame API)</span>
         </div>
-        <a
-          href={`https://www.youtube.com/watch?v=${videoId}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-[#F1E7DB] transition-colors flex items-center gap-1 text-[10px]"
-        >
-          <span>Open on YouTube</span>
-          <ExternalLink className="w-2.5 h-2.5" />
-        </a>
+        <div className="flex items-center gap-3">
+          {isReady && (
+            <span className="flex items-center gap-1 text-emerald-400">
+              <Play className="w-3 h-3 fill-current" /> Ready
+            </span>
+          )}
+          <a
+            href={`https://www.youtube.com/watch?v=${videoId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 hover:text-[#D8C2A6] transition-colors"
+          >
+            <span>Open in YouTube</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
       </div>
     </div>
   );

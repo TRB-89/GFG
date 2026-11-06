@@ -251,7 +251,7 @@ def build_verified_career_passport_data(
                 "verification_level": "assessment_supported" if lp.status == "completed" else "pending_review"
             })
 
-    if not completed_learning:
+    if not completed_learning and visibility.get("show_completed_learning", True):
         completed_learning = [
             {"id": "cl-1", "course_name": "Relational SQL Foundations & Multi-Table Joins", "provider": "Harvard CS50 SQL Open Courseware", "progress_percentage": 100, "status": "completed", "completed_at": "Oct 12, 2026", "verification_level": "assessment_supported"},
             {"id": "cl-2", "course_name": "SQL Window Functions & Cohort Partitioning", "provider": "PostgreSQL Tutorial Open Archives", "progress_percentage": 100, "status": "completed", "completed_at": "Oct 13, 2026", "verification_level": "assessment_supported"},
@@ -260,25 +260,26 @@ def build_verified_career_passport_data(
 
     # SECTION 7: Certifications
     certifications: List[Dict[str, Any]] = []
-    for cert in cand.certificates:
-        cert_ver = db.query(VerificationRecord).filter(
-            VerificationRecord.candidate_id == cand.id,
-            VerificationRecord.item_type == "certificate",
-            VerificationRecord.title == cert.certificate_name
-        ).first()
+    if visibility.get("show_education", True):
+        for cert in cand.certificates:
+            cert_ver = db.query(VerificationRecord).filter(
+                VerificationRecord.candidate_id == cand.id,
+                VerificationRecord.item_type == "certificate",
+                VerificationRecord.title == cert.certificate_name
+            ).first()
 
-        cert_level = cert_ver.verification_level if cert_ver else "verified"
-        certifications.append({
-            "id": cert.id,
-            "certificate_name": cert.certificate_name,
-            "issuer": cert.issuer,
-            "issue_date": cert.issue_date.strftime("%B %Y") if cert.issue_date else "August 2026",
-            "credential_url": cert.credential_url,
-            "verification_level": cert_level,
-            "verification_source": cert_ver.verification_source if cert_ver else "Digital Credential Registry Verification (Credly / Microsoft)"
-        })
+            cert_level = cert_ver.verification_level if cert_ver else "verified"
+            certifications.append({
+                "id": cert.id,
+                "certificate_name": cert.certificate_name,
+                "issuer": cert.issuer,
+                "issue_date": cert.issue_date.strftime("%B %Y") if cert.issue_date else "August 2026",
+                "credential_url": cert.credential_url,
+                "verification_level": cert_level,
+                "verification_source": cert_ver.verification_source if cert_ver else "Digital Credential Registry Verification (Credly / Microsoft)"
+            })
 
-    if not certifications:
+    if not certifications and visibility.get("show_education", True):
         certifications = [
             {
                 "id": "cert-1",
@@ -315,7 +316,7 @@ def build_verified_career_passport_data(
                 "verification_source": "Repository Code & Working Dashboard Review"
             })
 
-    if not portfolio_projects:
+    if not portfolio_projects and visibility.get("show_portfolio_projects", True):
         portfolio_projects = [
             {
                 "id": "proj-1",

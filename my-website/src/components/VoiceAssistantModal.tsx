@@ -45,9 +45,19 @@ export function VoiceAssistantModal({
   const [hasConsent, setHasConsent] = useState<boolean>(false);
   const [isListening, setIsListening] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [speechSupported, setSpeechSupported] = useState<boolean>(true);
+  const [speechSupported] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    return !!SpeechRecognition;
+  });
   const [textInput, setTextInput] = useState<string>("");
   const [selectedVoiceLang, setSelectedVoiceLang] = useState<SupportedLocale>(locale);
+  const [prevLocale, setPrevLocale] = useState(locale);
+  if (locale !== prevLocale) {
+    setPrevLocale(locale);
+    setSelectedVoiceLang(locale);
+  }
 
   // Chat conversation
   const [messages, setMessages] = useState<Message[]>([
@@ -60,26 +70,10 @@ export function VoiceAssistantModal({
   const recognitionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Sync voice language with platform language
-  useEffect(() => {
-    setSelectedVoiceLang(locale);
-  }, [locale]);
-
   // Scroll to bottom of chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // Check Web Speech API availability
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        setSpeechSupported(false);
-      }
-    }
-  }, []);
 
   // Text to speech helper
   const speakText = (text: string) => {

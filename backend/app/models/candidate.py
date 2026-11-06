@@ -16,6 +16,7 @@ class CandidateProfile(Base):
     preferred_location = Column(String(255), nullable=True)
     available_hours_per_day = Column(Integer, default=4)
     current_status = Column(String(50), default="ready_to_return")
+    return_readiness_status = Column(String(50), default="active", nullable=True)
     industry = Column(String(255), nullable=True)
     career_goals = Column(String(255), nullable=True)
     languages = Column(String(255), nullable=True)
@@ -26,6 +27,8 @@ class CandidateProfile(Base):
     github_url = Column(Text, nullable=True)
     portfolio_url = Column(Text, nullable=True)
     career_break_visibility = Column(String(50), default="private") # private, employers, public
+    is_discoverable_by_employers = Column(Boolean, default=False) # Explicit candidate opt-in required for skills-first discovery
+    anonymous_in_discovery = Column(Boolean, default=False)
     field_of_study = Column(String(255), nullable=True)
     previous_profession = Column(String(255), nullable=True)
     target_role = Column(String(255), nullable=True)
@@ -217,3 +220,60 @@ class SavedSimulation(Base):
     created_at = Column(DateTime, default=utc_now)
 
     candidate = relationship("CandidateProfile", back_populates="saved_simulations")
+
+class UserPersonalization(Base):
+    __tablename__ = "user_personalizations"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    primary_goal = Column(String(50), nullable=True) # return_to_work, learn_skills, start_business, grow_business, find_mentorship, explore_careers
+    secondary_goals = Column(JSON, nullable=True) # list of secondary goals
+    current_situation = Column(String(50), nullable=True) # career_break, currently_employed, entrepreneur, student_graduate, exploring
+    interests = Column(JSON, nullable=True) # list of professional areas/domains
+    challenges = Column(JSON, nullable=True) # skills_gap, limited_time, financial_constraints, confidence, guidance, opportunities
+    available_time = Column(String(50), default="5_to_10", nullable=True) # under_5, 5_to_10, 10_to_20, 20_plus
+    weekly_hours = Column(Integer, default=10, nullable=True)
+    preferred_support = Column(JSON, nullable=True) # roadmap, learning, mentorship, opportunities, resume_portfolio, business_guidance
+    preferred_experience = Column(String(50), default="blended", nullable=True) # guided, independent, blended
+    priority_order = Column(JSON, nullable=True) # custom user priority ordering
+    is_completed = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
+
+    user = relationship("Profile")
+
+class ConfidenceGoal(Base):
+    __tablename__ = "confidence_goals"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False, index=True)
+    category = Column(String(50), nullable=False) # skill_action, work_sample, interview_practice, mindset_reflection, micro_goal
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    action_type = Column(String(50), default="action") # exercise, upload, practice, reflection
+    status = Column(String(50), default="in_progress") # pending, in_progress, completed, archived
+    evidence_url = Column(String(500), nullable=True)
+    reflection_notes = Column(Text, nullable=True)
+    actionable_feedback = Column(Text, nullable=True)
+    is_milestone = Column(Boolean, default=False)
+    verified_by = Column(String(100), nullable=True)
+    consent_share_passport = Column(Boolean, default=False)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
+
+    user = relationship("Profile")
+
+class ConfidenceCheckIn(Base):
+    __tablename__ = "confidence_check_ins"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False, index=True)
+    confidence_level = Column(Integer, nullable=False) # 1 to 5
+    primary_feeling = Column(String(50), nullable=True)
+    reflection_note = Column(Text, nullable=True)
+    strength_highlight = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=utc_now)
+
+    user = relationship("Profile")
+

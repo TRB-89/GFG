@@ -76,48 +76,11 @@ export function GovernmentPilotModal({
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
   const [isFullscreenPresentation, setIsFullscreenPresentation] = useState<boolean>(false);
 
-  // Synchronize initialTab prop if changed
-  useEffect(() => {
-    if (initialTab) {
-      setActiveTab(initialTab);
-    }
-  }, [initialTab]);
-
-  // Load metrics when viewMode changes
-  useEffect(() => {
-    if (!isOpen) return;
-    loadMetrics(viewMode);
-  }, [isOpen, viewMode]);
-
-  // Load complementary data on mount or tab switch
-  useEffect(() => {
-    if (!isOpen) return;
-    if (activeTab === "design" && !pilotDesign) {
-      loadPilotDesign();
-    } else if (activeTab === "schemes" && schemes.length === 0) {
-      loadSchemes();
-    } else if (activeTab === "sdg" && !sdgData) {
-      loadSdgAlignment();
-    } else if (activeTab === "reporting") {
-      loadReport(viewMode);
-    } else if (activeTab === "presentation" && !presentation) {
-      loadPresentation();
-    }
-  }, [isOpen, activeTab, viewMode]);
-
-  // Keyboard navigation for presentation mode
-  useEffect(() => {
-    if (!isOpen || activeTab !== "presentation" || !presentation?.slides) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "PageDown") {
-        setCurrentSlideIndex((prev) => Math.min(prev + 1, presentation.slides.length - 1));
-      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
-        setCurrentSlideIndex((prev) => Math.max(prev - 1, 0));
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, activeTab, presentation]);
+  const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
+  if (initialTab !== prevInitialTab) {
+    setPrevInitialTab(initialTab);
+    setActiveTab(initialTab);
+  }
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -148,28 +111,6 @@ export function GovernmentPilotModal({
     }
   };
 
-  const handleSaveDesign = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!designForm) return;
-    setLoading(true);
-    try {
-      const res = await governmentPilotApi.updatePilotDesign(designForm);
-      setPilotDesign(res.pilot_design || designForm);
-      setIsEditingDesign(false);
-      showToast("Pilot targets successfully updated and logged.");
-      // If user is currently looking at proposed mode, reload to reflect edits
-      if (viewMode === "proposed") {
-        loadMetrics("proposed");
-      }
-    } catch {
-      showToast("Target update simulation saved locally.");
-      setPilotDesign(designForm);
-      setIsEditingDesign(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const loadSchemes = async (query?: string) => {
     try {
       const res = await governmentPilotApi.getSchemes(query);
@@ -179,11 +120,6 @@ export function GovernmentPilotModal({
     } catch {
       showToast("Error retrieving scheme directory.");
     }
-  };
-
-  const handleSearchSchemes = (e: React.FormEvent) => {
-    e.preventDefault();
-    loadSchemes(schemeSearch);
   };
 
   const loadSdgAlignment = async () => {
@@ -217,6 +153,73 @@ export function GovernmentPilotModal({
     } catch {
       showToast("Error loading presentation deck.");
     }
+  };
+
+  // Load metrics when viewMode changes
+  useEffect(() => {
+    if (!isOpen) return;
+    queueMicrotask(() => {
+      void loadMetrics(viewMode);
+    });
+  }, [isOpen, viewMode]);
+
+  // Load complementary data on mount or tab switch
+  useEffect(() => {
+    if (!isOpen) return;
+    queueMicrotask(() => {
+      if (activeTab === "design" && !pilotDesign) {
+        void loadPilotDesign();
+      } else if (activeTab === "schemes" && schemes.length === 0) {
+        void loadSchemes();
+      } else if (activeTab === "sdg" && !sdgData) {
+        void loadSdgAlignment();
+      } else if (activeTab === "reporting") {
+        void loadReport(viewMode);
+      } else if (activeTab === "presentation" && !presentation) {
+        void loadPresentation();
+      }
+    });
+  }, [isOpen, activeTab, viewMode, pilotDesign, schemes.length, sdgData, presentation]);
+
+  // Keyboard navigation for presentation mode
+  useEffect(() => {
+    if (!isOpen || activeTab !== "presentation" || !presentation?.slides) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === "PageDown") {
+        setCurrentSlideIndex((prev) => Math.min(prev + 1, presentation.slides.length - 1));
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        setCurrentSlideIndex((prev) => Math.max(prev - 1, 0));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, activeTab, presentation]);
+
+  const handleSaveDesign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!designForm) return;
+    setLoading(true);
+    try {
+      const res = await governmentPilotApi.updatePilotDesign(designForm);
+      setPilotDesign(res.pilot_design || designForm);
+      setIsEditingDesign(false);
+      showToast("Pilot targets successfully updated and logged.");
+      // If user is currently looking at proposed mode, reload to reflect edits
+      if (viewMode === "proposed") {
+        loadMetrics("proposed");
+      }
+    } catch {
+      showToast("Target update simulation saved locally.");
+      setPilotDesign(designForm);
+      setIsEditingDesign(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearchSchemes = (e: React.FormEvent) => {
+    e.preventDefault();
+    loadSchemes(schemeSearch);
   };
 
   const handleCopyReport = () => {

@@ -79,17 +79,23 @@ export function SmartOpportunityEngineModal({
   const [reportDetails, setReportDetails] = useState<string>("");
   const [isSubmittingReport, setIsSubmittingReport] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadInitialData();
-    }
-  }, [isOpen]);
+  const fetchFilteredJobs = async () => {
+    try {
+      const res = await opportunityEngineApi.searchOpportunities({
+        q: searchQuery.trim() || undefined,
+        sector: selectedSector !== "all" ? selectedSector : undefined,
+        opportunity_type: selectedType !== "all" ? selectedType : undefined,
+        work_mode: selectedWorkMode !== "all" ? selectedWorkMode : undefined,
+        is_verified_only: verifiedOnly ? true : undefined,
+      });
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchFilteredJobs();
+      if (res?.data) {
+        setJobs(res.data);
+      }
+    } catch (err: any) {
+      console.error("Filter jobs error:", err);
     }
-  }, [searchQuery, selectedSector, selectedType, selectedWorkMode, verifiedOnly, isOpen]);
+  };
 
   const loadInitialData = async () => {
     setIsLoading(true);
@@ -117,23 +123,21 @@ export function SmartOpportunityEngineModal({
     }
   };
 
-  const fetchFilteredJobs = async () => {
-    try {
-      const res = await opportunityEngineApi.searchOpportunities({
-        q: searchQuery.trim() || undefined,
-        sector: selectedSector !== "all" ? selectedSector : undefined,
-        opportunity_type: selectedType !== "all" ? selectedType : undefined,
-        work_mode: selectedWorkMode !== "all" ? selectedWorkMode : undefined,
-        is_verified_only: verifiedOnly ? true : undefined,
+  useEffect(() => {
+    if (isOpen) {
+      queueMicrotask(() => {
+        void loadInitialData();
       });
-
-      if (res?.data) {
-        setJobs(res.data);
-      }
-    } catch (err: any) {
-      console.error("Filter jobs error:", err);
     }
-  };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      queueMicrotask(() => {
+        void fetchFilteredJobs();
+      });
+    }
+  }, [searchQuery, selectedSector, selectedType, selectedWorkMode, verifiedOnly, isOpen]);
 
   const handleToggleSave = async (job: any, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -167,19 +171,25 @@ export function SmartOpportunityEngineModal({
 
     setIsSubmittingApp(true);
     try {
-      const res = await api.applyToJob(applyingJob.id, applyCoverNote);
+      await api.applyToJob(applyingJob.id, applyCoverNote);
+      const appliedJobId = applyingJob.id;
+      const appliedJobTitle = applyingJob.title;
       setFeedback({
         type: "success",
-        text: `Application successfully submitted for ${applyingJob.title}! Track progress under 'Application Tracker'.`,
+        text: `Application successfully submitted for ${appliedJobTitle}! Track progress under 'Application Tracker'.`,
       });
-      applyingJob.is_applied = true;
-      applyingJob.application_status = "submitted";
       setApplyingJob(null);
 
       // Refresh applications list
       const apps = await opportunityEngineApi.getMyApplications().catch(() => []);
       setMyApplications(apps);
-      setJobs([...jobs]);
+      setJobs((prevJobs) =>
+        prevJobs.map((j) =>
+          j.id === appliedJobId
+            ? { ...j, is_applied: true, application_status: "submitted" }
+            : j
+        )
+      );
     } catch (err: any) {
       setFeedback({ type: "error", text: err.message || "Unable to submit application." });
     } finally {
@@ -698,7 +708,7 @@ export function SmartOpportunityEngineModal({
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <span className="text-[10px] font-mono uppercase text-purple-400 block tracking-wider">
-                            {ret.company_name} // STRUCTURED RETURNSHIP
+                            {`${ret.company_name} // STRUCTURED RETURNSHIP`}
                           </span>
                           <h4 className="text-base font-medium text-[#F1E7DB] mt-0.5">{ret.title}</h4>
                         </div>

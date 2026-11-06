@@ -46,6 +46,7 @@ import { IntelligentOnboardingModal } from "@/components/IntelligentOnboardingMo
 import { DigitalTwinModal } from "@/components/DigitalTwinModal";
 import { CareerSimulatorModal } from "@/components/CareerSimulatorModal";
 import { AdaptiveRoadmapModal } from "@/components/AdaptiveRoadmapModal";
+import { ConfidenceRebuildModal } from "@/components/ConfidenceRebuildModal";
 import { CareerPassportModal } from "@/components/CareerPassportModal";
 import { SmartOpportunityEngineModal } from "@/components/SmartOpportunityEngineModal";
 import { AccessibilityToolbar } from "@/components/AccessibilityToolbar";
@@ -195,6 +196,7 @@ export default function Home() {
   const [isSimulatingSkill, setIsSimulatingSkill] = useState<boolean>(false);
   const [showSkillGapModal, setShowSkillGapModal] = useState<boolean>(false);
   const [showRoadmapModal, setShowRoadmapModal] = useState<boolean>(false);
+  const [showConfidenceModal, setShowConfidenceModal] = useState<boolean>(false);
   const [showInterviewModal, setShowInterviewModal] = useState<boolean>(false);
   const [interviewData, setInterviewData] = useState<any>(null);
   const [isLoadingInterview, setIsLoadingInterview] = useState<boolean>(false);
@@ -280,6 +282,9 @@ export default function Home() {
       case "open_roadmap":
         handleGenerateRoadmap();
         break;
+      case "open_confidence":
+        setShowConfidenceModal(true);
+        break;
       case "open_opportunities":
         setShowJobsModal(true);
         break;
@@ -315,10 +320,53 @@ export default function Home() {
     setShowDashboardModal(true);
   };
 
-  // Auto-authenticate as default demo user on mount
-  useEffect(() => {
-    switchDemoAccount("candidate");
-  }, []);
+  const refreshCandidateData = async () => {
+    try {
+      const [dash, prof, jobsRes, apps, read, aiJobs] = await Promise.all([
+        api.getCandidateDashboard().catch(() => null),
+        api.getCandidateProfile().catch(() => null),
+        api.getJobs({ limit: 10 }).catch(() => ({ data: [] })),
+        api.getMyApplications().catch(() => []),
+        api.getReadiness().catch(() => null),
+        api.getAIJobMatches().catch(() => []),
+      ]);
+
+      if (dash) setDashboardData(dash);
+      if (prof) setCandidateProfile(prof);
+      setJobs(jobsRes.data || []);
+      setMyApplications(apps || []);
+      if (read) setReadinessData(read);
+      if (aiJobs && aiJobs.length > 0) setAiMatches(aiJobs);
+
+      if ((prof as any)?.available_hours_per_day) {
+        setAvailableHours((prof as any).available_hours_per_day);
+      }
+
+      // Pick Data Analyst Returnship by Nova Technologies as the default featured job
+      const demoJob =
+        (jobsRes.data || []).find(
+          (j: any) => j.title?.includes("Data Analyst") && j.company_name?.includes("Nova")
+        ) || jobsRes.data?.[0];
+      if (demoJob) {
+        setSelectedJob(demoJob);
+      }
+    } catch (err: any) {
+      console.error("Error refreshing candidate data:", err);
+    }
+  };
+
+  const refreshEmployerData = async () => {
+    try {
+      const [dash, apps] = await Promise.all([
+        api.getEmployerDashboard().catch(() => null),
+        api.getEmployerApplications().catch(() => []),
+      ]);
+      if (dash) setDashboardData(dash);
+      setEmployerApplications(apps || []);
+    } catch (err: any) {
+      console.error("Error refreshing employer data:", err);
+    }
+  };
 
   // Switch demo account helper supporting 4 roles
   const switchDemoAccount = async (role: PlatformRole) => {
@@ -376,53 +424,12 @@ export default function Home() {
     }
   };
 
-  const refreshCandidateData = async () => {
-    try {
-      const [dash, prof, jobsRes, apps, read, aiJobs] = await Promise.all([
-        api.getCandidateDashboard().catch(() => null),
-        api.getCandidateProfile().catch(() => null),
-        api.getJobs({ limit: 10 }).catch(() => ({ data: [] })),
-        api.getMyApplications().catch(() => []),
-        api.getReadiness().catch(() => null),
-        api.getAIJobMatches().catch(() => []),
-      ]);
-
-      if (dash) setDashboardData(dash);
-      if (prof) setCandidateProfile(prof);
-      setJobs(jobsRes.data || []);
-      setMyApplications(apps || []);
-      if (read) setReadinessData(read);
-      if (aiJobs && aiJobs.length > 0) setAiMatches(aiJobs);
-
-      if ((prof as any)?.available_hours_per_day) {
-        setAvailableHours((prof as any).available_hours_per_day);
-      }
-
-      // Pick Data Analyst Returnship by Nova Technologies as the default featured job
-      const demoJob =
-        (jobsRes.data || []).find(
-          (j: any) => j.title?.includes("Data Analyst") && j.company_name?.includes("Nova")
-        ) || jobsRes.data?.[0];
-      if (demoJob) {
-        setSelectedJob(demoJob);
-      }
-    } catch (err: any) {
-      console.error("Error refreshing candidate data:", err);
-    }
-  };
-
-  const refreshEmployerData = async () => {
-    try {
-      const [dash, apps] = await Promise.all([
-        api.getEmployerDashboard().catch(() => null),
-        api.getEmployerApplications().catch(() => []),
-      ]);
-      if (dash) setDashboardData(dash);
-      setEmployerApplications(apps || []);
-    } catch (err: any) {
-      console.error("Error refreshing employer data:", err);
-    }
-  };
+  // Auto-authenticate as default demo user on mount
+  useEffect(() => {
+    queueMicrotask(() => {
+      void switchDemoAccount("candidate");
+    });
+  }, []);
 
   // Candidate Apply to Returnship
   const handleApplyToJob = async (jobId: string) => {
@@ -624,6 +631,7 @@ export default function Home() {
         onOpenEmployerDesk={handleOpenEmployerDesk}
         onOpenGovernmentPilot={handleOpenGovernmentPilot}
         onOpenLearningHub={() => setShowLearningModal(true)}
+        onOpenConfidence={() => setShowConfidenceModal(true)}
         onSwitchRole={switchDemoAccount}
       />
 
@@ -708,6 +716,7 @@ export default function Home() {
             if (el) el.scrollIntoView({ behavior: "smooth" });
           }}
           onStartComeback={() => setShowOnboardingModal(true)}
+          onOpenEmployerDesk={() => handleOpenEmployerDesk("dashboard")}
         />
 
         {/* ============================================================ */}
@@ -805,6 +814,18 @@ export default function Home() {
         onOpenOnboarding={() => setShowOnboardingModal(true)}
         onOpenDigitalTwin={() => setShowDigitalTwinModal(true)}
         onOpenSimulator={() => setShowSimulatorModal(true)}
+        onOpenRoadmap={handleGenerateRoadmap}
+        onOpenConfidence={() => setShowConfidenceModal(true)}
+        onOpenMentorship={() => {
+          setMentorshipInitialTab("mentors");
+          setShowMentorshipModal(true);
+        }}
+        onOpenOpportunities={() => setShowJobsModal(true)}
+        onOpenEntrepreneurship={() => {
+          setEntrepreneurshipInitialTab("pricing");
+          setShowEntrepreneurshipModal(true);
+        }}
+        onOpenLearning={() => setShowLearningModal(true)}
       />
 
       {/* 3. Verified Career Passport 2.0 Modal (Module 6) */}
@@ -902,6 +923,13 @@ export default function Home() {
         onClose={() => setShowRoadmapModal(false)}
         initialSector="Data Analyst"
         initialHours={Math.max(5, (availableHours || 3) * 5)}
+      />
+
+      {/* 6B. Confidence & Action Journal Modal (Phase 4) */}
+      <ConfidenceRebuildModal
+        isOpen={showConfidenceModal}
+        onClose={() => setShowConfidenceModal(false)}
+        onViewPassport={handleOpenPassport}
       />
 
       {/* 7. Skill Gap Modal */}

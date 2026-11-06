@@ -36,11 +36,11 @@ export function EntrepreneurshipHubModal({
 }: EntrepreneurshipHubModalProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"pricing" | "planner" | "expenses" | "proposals" | "sectors">(initialTab);
-
-  // Sync tab if initialTab changes
-  useEffect(() => {
-    if (initialTab) setActiveTab(initialTab);
-  }, [initialTab]);
+  const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
+  if (initialTab !== prevInitialTab) {
+    setPrevInitialTab(initialTab);
+    setActiveTab(initialTab);
+  }
 
   // ============================================================================
   // TAB 1: PRICING WORKSHEET STATE
@@ -56,13 +56,6 @@ export function EntrepreneurshipHubModal({
   const [pricingResult, setPricingResult] = useState<any>(null);
   const [isCalculatingPricing, setIsCalculatingPricing] = useState<boolean>(false);
 
-  // Auto-calculate on initial mount and when inputs change
-  useEffect(() => {
-    if (isOpen) {
-      calculateRates();
-    }
-  }, [isOpen, pricingInputs]);
-
   const calculateRates = async () => {
     setIsCalculatingPricing(true);
     try {
@@ -74,6 +67,15 @@ export function EntrepreneurshipHubModal({
       setIsCalculatingPricing(false);
     }
   };
+
+  // Auto-calculate on initial mount and when inputs change
+  useEffect(() => {
+    if (isOpen) {
+      queueMicrotask(() => {
+        void calculateRates();
+      });
+    }
+  }, [isOpen, pricingInputs]);
 
   // ============================================================================
   // TAB 2: BUSINESS IDEA PLANNER STATE
@@ -928,7 +930,7 @@ Created via GFG Entrepreneurship Hub`;
                       generatedProposal
                     ) : (
                       <div className="text-center py-12 text-[#777]">
-                        Click "Generate Formal Client Proposal" to format deliverables, commercial milestones, and payment terms into a ready-to-send document.
+                        Click &ldquo;Generate Formal Client Proposal&rdquo; to format deliverables, commercial milestones, and payment terms into a ready-to-send document.
                       </div>
                     )}
                   </div>

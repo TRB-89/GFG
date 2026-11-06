@@ -11,6 +11,9 @@ from backend.app.models.candidate import (
     Certificate,
     LearningProgress,
     Recommendation,
+    UserPersonalization,
+    ConfidenceGoal,
+    ConfidenceCheckIn,
 )
 from backend.app.models.company import Company
 from backend.app.models.job import Job, JobSkill, SavedOpportunity, JobReport
@@ -101,5 +104,8 @@ __all__ = [
     "AssignmentSubmission",
     "LmsCertificate",
     "CertificateAuditLog",
+    "UserPersonalization",
+    "ConfidenceGoal",
+    "ConfidenceCheckIn",
 ]
 

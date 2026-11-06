@@ -111,7 +111,7 @@ export function TestimonialsSection({ onOpenCommunity }: TestimonialsSectionProp
                 <Quote className="w-8 h-8 text-orange-500/40" />
 
                 <p className="text-sm sm:text-base text-[#d8c8b8] leading-relaxed font-light italic font-serif">
-                  "{story.quote}"
+                  &ldquo;{story.quote}&rdquo;
                 </p>
               </div>
 

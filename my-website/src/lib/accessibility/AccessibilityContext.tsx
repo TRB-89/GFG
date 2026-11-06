@@ -39,81 +39,77 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
 });
 
 export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
-  const [highContrast, setHighContrastState] = useState<boolean>(false);
-  const [fontSize, setFontSizeState] = useState<FontSizeScale>("normal");
-  const [reducedMotion, setReducedMotionState] = useState<boolean>(false);
-  const [dyslexicFont, setDyslexicFontState] = useState<boolean>(false);
+  const [highContrast, setHighContrastState] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem("gfg_a11y_high_contrast") === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [fontSize, setFontSizeState] = useState<FontSizeScale>(() => {
+    if (typeof window === "undefined") return "normal";
+    try {
+      return (localStorage.getItem("gfg_a11y_font_size") as FontSizeScale) || "normal";
+    } catch {
+      return "normal";
+    }
+  });
+  const [reducedMotion, setReducedMotionState] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const savedRM = localStorage.getItem("gfg_a11y_reduced_motion");
+      if (savedRM !== null) return savedRM === "true";
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      return false;
+    }
+  });
+  const [dyslexicFont, setDyslexicFontState] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem("gfg_a11y_dyslexic_font") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [announcement, setAnnouncement] = useState<string | null>(null);
 
-  // Initialize from system preferences and localStorage
+  // Synchronize document classes with accessibility state
   useEffect(() => {
-    try {
-      const savedHC = localStorage.getItem("gfg_a11y_high_contrast") === "true";
-      const savedFS = (localStorage.getItem("gfg_a11y_font_size") as FontSizeScale) || "normal";
-      const savedRM = localStorage.getItem("gfg_a11y_reduced_motion");
-      const savedDF = localStorage.getItem("gfg_a11y_dyslexic_font") === "true";
-
-      // Detect system prefers-reduced-motion
-      const prefersReducedMotion =
-        typeof window !== "undefined" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      setHighContrastState(savedHC);
-      setFontSizeState(savedFS);
-      setReducedMotionState(savedRM !== null ? savedRM === "true" : prefersReducedMotion);
-      setDyslexicFontState(savedDF);
-
-      applyA11yClasses({
-        highContrast: savedHC,
-        fontSize: savedFS,
-        reducedMotion: savedRM !== null ? savedRM === "true" : prefersReducedMotion,
-        dyslexicFont: savedDF,
-      });
-    } catch {
-      // Safe fallback
-    }
-  }, []);
-
-  const applyA11yClasses = (state: {
-    highContrast: boolean;
-    fontSize: FontSizeScale;
-    reducedMotion: boolean;
-    dyslexicFont: boolean;
-  }) => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
 
-    // High Contrast
-    if (state.highContrast) {
+    if (highContrast) {
       root.classList.add("a11y-high-contrast");
     } else {
       root.classList.remove("a11y-high-contrast");
     }
 
-    // Font Scaling
     root.classList.remove("a11y-text-large", "a11y-text-xlarge");
-    if (state.fontSize === "large") root.classList.add("a11y-text-large");
-    if (state.fontSize === "xlarge") root.classList.add("a11y-text-xlarge");
+    if (fontSize === "large") root.classList.add("a11y-text-large");
+    if (fontSize === "xlarge") root.classList.add("a11y-text-xlarge");
 
-    // Reduced Motion
-    if (state.reducedMotion) {
+    if (reducedMotion) {
       root.classList.add("a11y-reduced-motion");
     } else {
       root.classList.remove("a11y-reduced-motion");
     }
 
-    // Dyslexic font
-    if (state.dyslexicFont) {
+    if (dyslexicFont) {
       root.classList.add("a11y-dyslexic-font");
     } else {
       root.classList.remove("a11y-dyslexic-font");
     }
-  };
+  }, [highContrast, fontSize, reducedMotion, dyslexicFont]);
 
   const setHighContrast = (val: boolean) => {
     setHighContrastState(val);
-    localStorage.setItem("gfg_a11y_high_contrast", String(val));
-    applyA11yClasses({ highContrast: val, fontSize, reducedMotion, dyslexicFont });
+    try {
+      localStorage.setItem("gfg_a11y_high_contrast", String(val));
+    } catch {
+      // ignore
+    }
     announce(val ? "High contrast mode enabled" : "High contrast mode disabled");
   };
 
@@ -121,15 +117,21 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   const setFontSize = (val: FontSizeScale) => {
     setFontSizeState(val);
-    localStorage.setItem("gfg_a11y_font_size", val);
-    applyA11yClasses({ highContrast, fontSize: val, reducedMotion, dyslexicFont });
+    try {
+      localStorage.setItem("gfg_a11y_font_size", val);
+    } catch {
+      // ignore
+    }
     announce(`Font size changed to ${val}`);
   };
 
   const setReducedMotion = (val: boolean) => {
     setReducedMotionState(val);
-    localStorage.setItem("gfg_a11y_reduced_motion", String(val));
-    applyA11yClasses({ highContrast, fontSize, reducedMotion: val, dyslexicFont });
+    try {
+      localStorage.setItem("gfg_a11y_reduced_motion", String(val));
+    } catch {
+      // ignore
+    }
     announce(val ? "Animations reduced" : "Standard animations enabled");
   };
 
@@ -137,8 +139,11 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   const setDyslexicFont = (val: boolean) => {
     setDyslexicFontState(val);
-    localStorage.setItem("gfg_a11y_dyslexic_font", String(val));
-    applyA11yClasses({ highContrast, fontSize, reducedMotion, dyslexicFont: val });
+    try {
+      localStorage.setItem("gfg_a11y_dyslexic_font", String(val));
+    } catch {
+      // ignore
+    }
     announce(val ? "High legibility font enabled" : "Standard font enabled");
   };
 

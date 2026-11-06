@@ -34,7 +34,6 @@ export default function CertificateVerificationPage() {
     if (!credentialId) return;
 
     let isMounted = true;
-    setIsLoading(true);
 
     learningApi
       .verifyCertificatePublic(credentialId)
@@ -182,7 +181,7 @@ export default function CertificateVerificationPage() {
 
             <div className="p-4 rounded-xl bg-red-950/20 border border-red-500/30 max-w-lg mx-auto text-left text-xs text-red-200/90 space-y-1 mb-8 font-mono">
               <div className="font-bold uppercase tracking-wider text-red-300">Audited Revocation Rationale:</div>
-              <p className="italic">"{verification.revocation_reason}"</p>
+              <p className="italic">&ldquo;{verification.revocation_reason}&rdquo;</p>
               {formattedRevokedDate && (
                 <div className="text-[10px] text-red-400/80 pt-1">
                   Revocation Timestamp: {formattedRevokedDate}

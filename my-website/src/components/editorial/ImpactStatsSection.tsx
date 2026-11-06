@@ -106,7 +106,7 @@ export function ImpactStatsSection() {
             </span>
           </h2>
           <p className="text-base text-[#bfaea0] font-light">
-            We don't count vanity metrics. We measure real livelihoods revived, fair stipends negotiated, and glass ceilings shattered.
+            We don&apos;t count vanity metrics. We measure real livelihoods revived, fair stipends negotiated, and glass ceilings shattered.
           </p>
         </div>
 

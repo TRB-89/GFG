@@ -26,13 +26,23 @@ export function CareerComebackPortal({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [webglSupported, setWebglSupported] = useState<boolean>(true);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false);
+  const [webglSupported] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const testCanvas = document.createElement("canvas");
+      return !!(testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl"));
+    } catch {
+      return false;
+    }
+  });
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
 
   useEffect(() => {
-    // Detect reduced motion preference
+    if (typeof window === "undefined") return;
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
     const handleMotionChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
     mediaQuery.addEventListener("change", handleMotionChange);
 
@@ -40,20 +50,7 @@ export function CareerComebackPortal({
   }, []);
 
   useEffect(() => {
-    if (!canvasRef.current || prefersReducedMotion) return;
-
-    // Check WebGL availability
-    try {
-      const testCanvas = document.createElement("canvas");
-      const gl = testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl");
-      if (!gl) {
-        setWebglSupported(false);
-        return;
-      }
-    } catch {
-      setWebglSupported(false);
-      return;
-    }
+    if (!canvasRef.current || prefersReducedMotion || !webglSupported) return;
 
     const canvas = canvasRef.current;
     const width = window.innerWidth;
@@ -238,7 +235,7 @@ export function CareerComebackPortal({
 
     // 7. Render Loop
     let animationFrameId: number;
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);

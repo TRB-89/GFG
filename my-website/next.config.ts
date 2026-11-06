@@ -19,6 +19,14 @@ const nextConfig: NextConfig = {
           source: "/api/:path*",
           destination: `${backendUrl}/api/:path*`,
         },
+        {
+          source: "/storage/avatars/:path*",
+          destination: `${backendUrl}/storage/avatars/:path*`,
+        },
+        {
+          source: "/storage/company-logos/:path*",
+          destination: `${backendUrl}/storage/company-logos/:path*`,
+        },
       ];
     }
     return [];

@@ -2,72 +2,101 @@
 @import "tw-animate-css";
 
 @theme inline {
-  --color-bg-primary: #111111;
-  --color-bg-secondary: #181818;
-  --color-bg-surface: #1C1C1C;
-  --color-beige-soft: #D8C2A6;
-  --color-rose-muted: #A56F7C;
-  --color-cream-warm: #F1E7DB;
-  --color-gray-muted: #9A9A9A;
-  --color-burgundy-deep: #5A2B35;
-  --color-pink-soft: #C79AA7;
+  --color-bg-primary: #111714;
+  --color-bg-secondary: #1B231E;
+  --color-bg-surface: #202A23;
+  --color-sage-accent: #B6C899;
+  --color-muted-green: #697D69;
+  --color-warm-ivory: #F5F0E5;
+  --color-sage-mist: #AAB9A9;
+  --color-forest-border: #344236;
 
-  --color-espresso: #171310;
-  --color-cocoa: #59382D;
-  --color-terracotta: #B66C4B;
-  --color-champagne: #D8B58C;
-  --color-ivory: #F4EDE3;
+  --color-beige-soft: #B6C899;
+  --color-rose-muted: #697D69;
+  --color-cream-warm: #F5F0E5;
+  --color-gray-muted: #AAB9A9;
+  --color-burgundy-deep: #1B231E;
+  --color-pink-soft: #B6C899;
 
-  --color-background: #171310;
-  --color-foreground: #F4EDE3;
-  --color-card: rgba(30, 24, 20, 0.85);
-  --color-card-foreground: #F4EDE3;
-  --color-primary: #F4EDE3;
-  --color-primary-foreground: #171310;
-  --color-secondary: #D8B58C;
-  --color-secondary-foreground: #171310;
-  --color-muted: rgba(216, 181, 140, 0.08);
-  --color-muted-foreground: #A89B90;
-  --color-accent: #B66C4B;
-  --color-accent-foreground: #F4EDE3;
-  --color-border: rgba(216, 181, 140, 0.16);
+  --color-espresso: #111714;
+  --color-cocoa: #1B231E;
+  --color-terracotta: #697D69;
+  --color-champagne: #B6C899;
+  --color-ivory: #F5F0E5;
+
+  --color-background: #111714;
+  --color-foreground: #F5F0E5;
+  --color-card: rgba(27, 35, 30, 0.92);
+  --color-card-foreground: #F5F0E5;
+  --color-primary: #B6C899;
+  --color-primary-foreground: #111714;
+  --color-secondary: #697D69;
+  --color-secondary-foreground: #F5F0E5;
+  --color-muted: rgba(182, 200, 153, 0.08);
+  --color-muted-foreground: #AAB9A9;
+  --color-accent: #B6C899;
+  --color-accent-foreground: #111714;
+  --color-border: #344236;
 
   --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: var(--font-serif), Cormorant Garamond, Georgia, serif;
 }
 
 :root {
-  --bg-primary: #171310;
-  --bg-secondary: #221B17;
-  --color-espresso: #171310;
-  --color-cocoa: #59382D;
-  --color-terracotta: #B66C4B;
-  --color-champagne: #D8B58C;
-  --color-ivory: #F4EDE3;
-  --color-beige: #D8B58C;
-  --color-rose: #B66C4B;
-  --color-cream: #F4EDE3;
-  --color-gray: #A89B90;
+  --bg-primary: #111714;
+  --bg-secondary: #1B231E;
+  --bg-elevated: #202A23;
+  --accent-sage: #B6C899;
+  --muted-green: #697D69;
+  --warm-ivory: #F5F0E5;
+  --secondary-text: #AAB9A9;
+  --border-subdued: #344236;
+
+  --color-espresso: #111714;
+  --color-cocoa: #1B231E;
+  --color-terracotta: #697D69;
+  --color-champagne: #B6C899;
+  --color-ivory: #F5F0E5;
+  --color-beige: #B6C899;
+  --color-rose: #697D69;
+  --color-cream: #F5F0E5;
+  --color-gray: #AAB9A9;
 }
 
 @layer base {
   * {
-    border-color: rgba(216, 194, 166, 0.12);
+    border-color: #344236;
   }
 
   body {
-    background-color: #111111;
-    color: #F1E7DB;
+    background-color: #111714;
+    color: #F5F0E5;
     font-family: var(--font-sans), sans-serif;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
 
+  /* Accessible focus indicators for keyboard navigation (WCAG 2.2 AA) */
+  :focus-visible {
+    outline: 2px solid #B6C899;
+    outline-offset: 2px;
+  }
+
   /* Editorial Headings */
   h1, h2, h3, h4 {
     letter-spacing: -0.025em;
     font-weight: 500;
+  }
+}
+
+/* Reduced Motion Support (prefers-reduced-motion) */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

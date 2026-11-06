@@ -7,11 +7,13 @@ import { ShieldCheck, HeartHandshake, Zap, Compass, Check, ArrowRight } from "lu
 interface MissionStorySectionProps {
   onExploreSolutions?: () => void;
   onStartComeback?: () => void;
+  onOpenEmployerDesk?: () => void;
 }
 
 export function MissionStorySection({
   onExploreSolutions,
   onStartComeback,
+  onOpenEmployerDesk,
 }: MissionStorySectionProps = {}) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
@@ -131,7 +133,7 @@ export function MissionStorySection({
                 <div className="space-y-6 relative z-10">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono tracking-widest text-orange-400/90 font-bold">
-                      {pillar.num} //
+                      {`${pillar.num} //`}
                     </span>
                     <span className="px-3 py-1 rounded-full text-[10px] font-mono tracking-wider bg-orange-500/10 border border-orange-500/20 text-orange-300">
                       {pillar.tag}
@@ -163,6 +165,114 @@ export function MissionStorySection({
               </motion.div>
             );
           })}
+        </motion.div>
+
+        {/* ============================================================ */}
+        {/* DUAL PATHWAY: RETURNER VS EMPLOYER DISTINCT JOURNEYS         */}
+        {/* ============================================================ */}
+        <motion.div
+          variants={itemVariants}
+          className="pt-10 border-t border-[#344236] space-y-6"
+        >
+          <div className="text-center space-y-2 max-w-2xl mx-auto">
+            <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#B6C899] font-semibold">
+              SEPARATE JOURNEYS // UNIFIED IMPACT
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-light text-[#F5F0E5]">
+              Tailored Platforms for Returners and Inclusive Employers
+            </h3>
+            <p className="text-xs sm:text-sm text-[#AAB9A9] leading-relaxed">
+              Whether you are rebuilding your career trajectory or seeking experienced, battle-tested talent, GFG provides dedicated workflows.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+            {/* Returner Pathway Card */}
+            <div className="p-8 rounded-3xl bg-[#1B231E] border border-[#344236] hover:border-[#B6C899] transition-all flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono uppercase px-3 py-1 rounded-full bg-[#202A23] text-[#B6C899] border border-[#B6C899]/30 font-bold">
+                    For Women Returners
+                  </span>
+                  <span className="text-xs text-[#AAB9A9]">Empowerment &amp; Skills</span>
+                </div>
+                <h4 className="text-xl font-bold text-[#F5F0E5]">
+                  Rebuild Confidence, Update Skills &amp; Step Back into Leadership
+                </h4>
+                <p className="text-xs sm:text-sm text-[#AAB9A9] leading-relaxed">
+                  Access 8-week structured roadmaps, a private confidence action journal, demonstrable portfolio projects, 1:1 mentor coaching, and direct applications to verified returnships.
+                </p>
+                <ul className="text-xs text-[#AAB9A9] space-y-2">
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#B6C899]" />
+                    <span>8-Week Adaptive Roadmap calibrated to your weekly hours</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#B6C899]" />
+                    <span>Non-judgmental Confidence Journal &amp; Milestone Proof</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#B6C899]" />
+                    <span>Cryptographically verified Career Passport 2.0</span>
+                  </li>
+                </ul>
+              </div>
+
+              {onStartComeback && (
+                <button
+                  type="button"
+                  onClick={onStartComeback}
+                  className="w-full py-3 px-6 bg-[#B6C899] hover:bg-[#F5F0E5] text-[#111714] text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 hover:scale-[1.01]"
+                >
+                  <span>Start Your Personalized Journey</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Employer Pathway Card */}
+            <div className="p-8 rounded-3xl bg-[#171F1A] border border-[#344236] hover:border-[#697D69] transition-all flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono uppercase px-3 py-1 rounded-full bg-[#202A23] text-[#F5F0E5] border border-[#344236] font-bold">
+                    For Inclusive Employers
+                  </span>
+                  <span className="text-xs text-[#AAB9A9]">Talent &amp; Returnships</span>
+                </div>
+                <h4 className="text-xl font-bold text-[#F5F0E5]">
+                  Discover Vetted Returner Talent &amp; Launch Returnship Cohorts
+                </h4>
+                <p className="text-xs sm:text-sm text-[#AAB9A9] leading-relaxed">
+                  Access pre-vetted senior professionals, verify demonstrable work samples and Career Passports, post returnship openings with salary parity, and track cohort onboarding analytics.
+                </p>
+                <ul className="text-xs text-[#AAB9A9] space-y-2">
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#697D69]" />
+                    <span>Bias-free talent discovery without resume-gap filtering</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#697D69]" />
+                    <span>Returnship Cohort Builder &amp; Compensation Parity Toolkit</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#697D69]" />
+                    <span>Tenant-isolated candidate records with role-based governance</span>
+                  </li>
+                </ul>
+              </div>
+
+              {onOpenEmployerDesk && (
+                <button
+                  type="button"
+                  onClick={onOpenEmployerDesk}
+                  className="w-full py-3 px-6 bg-[#202A23] hover:bg-[#344236] text-[#F5F0E5] text-xs font-bold rounded-xl border border-[#344236] transition-all flex items-center justify-center gap-2"
+                >
+                  <span>Access Employer Intelligence Portal</span>
+                  <ArrowRight className="w-4 h-4 text-[#B6C899]" />
+                </button>
+              )}
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>

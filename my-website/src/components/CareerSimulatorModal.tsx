@@ -136,7 +136,6 @@ export function CareerSimulatorModal({
     if (!isOpen) return;
 
     let mounted = true;
-    setIsLoading(true);
 
     async function loadData() {
       try {
@@ -568,7 +567,7 @@ export function CareerSimulatorModal({
 
               {savedSimulations.length === 0 ? (
                 <div className="p-4 rounded-xl border border-dashed border-[#D8C2A6]/20 text-center text-xs text-[#9A9A9A] font-mono">
-                  No saved scenarios yet. Configure inputs on the right and click "Save Scenario".
+                  No saved scenarios yet. Configure inputs on the right and click &ldquo;Save Scenario&rdquo;.
                 </div>
               ) : (
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -618,7 +617,7 @@ export function CareerSimulatorModal({
                   STEP 1: SELECT SIMULATION SCENARIO
                 </span>
                 <span className="text-[11px] font-mono text-[#9A9A9A]">
-                  Core Concept: "What could change if I take this step?"
+                  Core Concept: &ldquo;What could change if I take this step?&rdquo;
                 </span>
               </div>
 

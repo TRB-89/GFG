@@ -3187,6 +3187,17 @@ export const employerIntelligenceApi = {
     });
   },
 
+  verifyOrganization: async (companyId: string, payload: {
+    verification_status: string;
+    verification_notes?: string;
+    compliance_checklist?: any;
+  }) => {
+    return await apiRequest<any>(`/api/employer/organizations/${companyId}/verify`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  },
+
   getDashboard: async (companyName?: string) => {
     try {
       const q = companyName ? `?company_name=${encodeURIComponent(companyName)}` : "";
@@ -3272,9 +3283,27 @@ export const employerIntelligenceApi = {
     }
   },
 
-  getConsentedCandidates: async (companyName?: string) => {
+  getConsentedCandidates: async (filters?: {
+    search?: string;
+    skill?: string;
+    location?: string;
+    work_mode?: string;
+    role?: string;
+    experience_min?: number;
+    has_portfolio?: boolean;
+    companyName?: string;
+  }) => {
     try {
-      const q = companyName ? `?company_name=${encodeURIComponent(companyName)}` : "";
+      const params = new URLSearchParams();
+      if (filters?.companyName) params.append("company_name", filters.companyName);
+      if (filters?.search) params.append("search", filters.search);
+      if (filters?.skill) params.append("skill", filters.skill);
+      if (filters?.location) params.append("location", filters.location);
+      if (filters?.work_mode) params.append("work_mode", filters.work_mode);
+      if (filters?.role) params.append("role", filters.role);
+      if (filters?.experience_min !== undefined) params.append("experience_min", filters.experience_min.toString());
+      if (filters?.has_portfolio !== undefined) params.append("has_portfolio", filters.has_portfolio.toString());
+      const q = params.toString() ? `?${params.toString()}` : "";
       return await apiRequest<any>(`/api/employer/candidates/consented${q}`);
     } catch {
       return {
@@ -4430,6 +4459,352 @@ export const adminApi = {
     }
   }
 };
+
+// Module 13: Phase 4 Personalization, Confidence Empowerment & Adaptive Roadmaps
+export interface ConfidenceGoal {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  category: string;
+  action_plan?: string;
+  demonstrable_evidence_url?: string;
+  user_reflection?: string;
+  actionable_feedback?: string;
+  is_completed: boolean;
+  is_milestone: boolean;
+  share_on_passport: boolean;
+  completed_at?: string;
+  created_at?: string;
+}
+
+export interface ConfidenceCheckIn {
+  id: string;
+  user_id: string;
+  score: number;
+  reflection?: string;
+  noted_strengths?: string;
+  created_at?: string;
+}
+
+export interface RoadmapTask {
+  id: string;
+  title: string;
+  description: string;
+  estimated_hours: number;
+  completed: boolean;
+  evidence_url?: string;
+  notes?: string;
+  category?: string;
+}
+
+export interface RoadmapWeek {
+  week: number;
+  theme: string;
+  milestone: string;
+  tasks: RoadmapTask[];
+}
+
+export interface AdaptiveRoadmap {
+  id: string;
+  user_id: string;
+  title: string;
+  variant: string;
+  target_role: string;
+  target_industry: string;
+  pace: string;
+  weekly_hours: number;
+  is_paused: boolean;
+  weeks_data: RoadmapWeek[];
+  completed_task_ids: string[];
+  total_weeks: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const personalizationApi = {
+  getPersonalization: async () => {
+    try {
+      return await apiRequest<any>("/api/personalization/me");
+    } catch {
+      return {
+        id: "demo-personalization",
+        user_id: "demo-user",
+        primary_goal: "return_to_work",
+        secondary_goals: ["learn_skills", "find_mentorship"],
+        current_situation: "career_break",
+        interests: ["Technology & Software", "Data Analysis", "Cloud"],
+        challenges: ["skills_gap", "confidence"],
+        available_time: "10_to_20",
+        weekly_hours: 15,
+        preferred_support: ["roadmap", "mentorship", "learning"],
+        preferred_experience: "guided",
+        priority_order: ["skills", "mentorship", "opportunities"],
+        is_completed: true,
+      };
+    }
+  },
+
+  savePersonalization: async (payload: {
+    primary_goal?: string;
+    secondary_goals?: string[];
+    current_situation?: string;
+    interests?: string[];
+    challenges?: string[];
+    available_time?: string;
+    weekly_hours?: number;
+    preferred_support?: string[];
+    preferred_experience?: string;
+    priority_order?: string[];
+    is_completed?: boolean;
+  }) => {
+    try {
+      return await apiRequest<any>("/api/personalization/me", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      return {
+        id: "demo-personalization",
+        user_id: "demo-user",
+        ...payload,
+        is_completed: payload.is_completed ?? true,
+      };
+    }
+  },
+
+  getPersonalizedDashboard: async () => {
+    try {
+      return await apiRequest<any>("/api/personalization/dashboard");
+    } catch {
+      return {
+        primary_goal: "return_to_work",
+        journey_title: "Career Comeback & Re-Entry Track",
+        journey_summary: "Tailored to help you refresh technical skills, build confidence, and connect with verified employer returnships.",
+        primary_action: {
+          id: "act-1",
+          title: "Complete Week 1: Core Foundation & Comeback Narrative",
+          description: "Reframe your career break as strategic growth and verify your foundational competencies.",
+          action_type: "open_roadmap",
+          target_route: "/roadmap",
+          cta_label: "Open Adaptive Roadmap",
+          badge: "Recommended First Step",
+          estimated_time: "2 hours",
+        },
+        secondary_steps: [
+          {
+            id: "act-2",
+            title: "Set Your First Actionable Milestone",
+            description: "Choose a practical milestone like drafting your narrative or completing a mini-project.",
+            action_type: "open_confidence",
+            target_route: "/confidence",
+            cta_label: "Confidence Journal",
+            badge: "Confidence Building",
+            estimated_time: "30 mins",
+          },
+          {
+            id: "act-3",
+            title: "Schedule 1:1 Returnee Mentor Guidance",
+            description: "Connect with an alumna who successfully transitioned back to industry.",
+            action_type: "open_mentorship",
+            target_route: "/mentors",
+            cta_label: "Explore Mentors",
+            badge: "Mentorship",
+            estimated_time: "45 mins",
+          },
+          {
+            id: "act-4",
+            title: "Explore Vetted Returnship Roles",
+            description: "Browse returnships with partner employers who value experienced returners.",
+            action_type: "open_opportunities",
+            target_route: "/jobs",
+            cta_label: "View Returnships",
+            badge: "Opportunities",
+            estimated_time: "15 mins",
+          },
+        ],
+        confidence_metric: {
+          recent_score: 4,
+          completed_goals: 1,
+          total_goals: 3,
+          encouraging_message: "You are making steady, measurable progress. Every small action builds capability and momentum.",
+          next_check_in_prompt: "How are you feeling about your progress this week?",
+        },
+        recommended_learning: [
+          { id: "mod-1", title: "Modern Workplace Technologies & AI Assistants", duration: "10 hours", badge: "Verified Track" },
+          { id: "mod-2", title: "Data Analytics & Business Intelligence Refresher", duration: "15 hours", badge: "Hands-on Project" },
+        ],
+        recommended_opportunities: [
+          { id: "job-1", title: "Data Analyst Returnship", company_name: "Nova Technologies", location: "Bengaluru, IN", work_mode: "Hybrid", stipend: "₹45,000/mo" },
+        ],
+        recommended_mentors: [
+          { id: "men-1", name: "Priya Sharma", role: "VP of Engineering & Returnee Alumna", company: "TechCorp" },
+        ],
+        explainability_notes: [
+          { category: "Goal Alignment", headline: "Why these steps?", reason: "Recommendations are specifically tailored to your stated goal of returning to work with 10-15 hours/week." },
+          { category: "Skill Protection", headline: "Pre-break mastery honored", reason: "Your prior professional experience is recognized as a foundation, focusing solely on modern tool updates." },
+        ],
+      };
+    }
+  },
+
+  getConfidenceGoals: async () => {
+    try {
+      return await apiRequest<any[]>("/api/personalization/confidence/goals");
+    } catch {
+      return [
+        {
+          id: "goal-1",
+          user_id: "demo",
+          title: "Craft Comeback Elevator Pitch",
+          description: "Summarize your prior achievements and current focus in 3 compelling sentences.",
+          category: "career_break_narrative",
+          action_plan: "1. List 3 key pre-break achievements. 2. State current skills refresher. 3. Define target impact.",
+          demonstrable_evidence_url: "https://docs.google.com/document/d/sample-pitch",
+          user_reflection: "Felt empowering to articulate my leadership tenure without apologizing for family care sabbatical.",
+          actionable_feedback: "Demonstrable milestone achieved! Your narrative articulates past achievements and current readiness with strong agency.",
+          is_completed: true,
+          is_milestone: true,
+          share_on_passport: true,
+          completed_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "goal-2",
+          user_id: "demo",
+          title: "Publish Real-World Portfolio Project",
+          description: "Build and deploy a working data analysis dashboard or application.",
+          category: "work_sample",
+          action_plan: "Complete end-to-end repository with clear README, data cleaning, and visual insights.",
+          demonstrable_evidence_url: "",
+          user_reflection: "",
+          actionable_feedback: "",
+          is_completed: false,
+          is_milestone: true,
+          share_on_passport: true,
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "goal-3",
+          user_id: "demo",
+          title: "Conduct 1:1 Mock Interview with Mentor",
+          description: "Practice answering behavioral and technical questions in a supportive setting.",
+          category: "interview_practice",
+          action_plan: "Book 45-minute session with an alumna mentor and review portfolio code.",
+          demonstrable_evidence_url: "",
+          user_reflection: "",
+          actionable_feedback: "",
+          is_completed: false,
+          is_milestone: false,
+          share_on_passport: false,
+          created_at: new Date().toISOString(),
+        },
+      ];
+    }
+  },
+
+  createConfidenceGoal: async (payload: {
+    title: string;
+    description?: string;
+    category?: string;
+    action_plan?: string;
+    is_milestone?: boolean;
+    share_on_passport?: boolean;
+  }) => {
+    return await apiRequest<any>("/api/personalization/confidence/goals", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  updateConfidenceGoal: async (
+    goalId: string,
+    payload: {
+      title?: string;
+      description?: string;
+      demonstrable_evidence_url?: string;
+      user_reflection?: string;
+      is_completed?: boolean;
+      share_on_passport?: boolean;
+    }
+  ) => {
+    return await apiRequest<any>(`/api/personalization/confidence/goals/${goalId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  createConfidenceCheckIn: async (payload: {
+    score: number;
+    reflection?: string;
+    noted_strengths?: string;
+  }) => {
+    return await apiRequest<any>("/api/personalization/confidence/check-in", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  getConfidenceCheckIns: async () => {
+    try {
+      return await apiRequest<any[]>("/api/personalization/confidence/check-ins");
+    } catch {
+      return [
+        {
+          id: "ci-1",
+          user_id: "demo",
+          score: 4,
+          reflection: "Gained significant clarity after outlining my portfolio project.",
+          noted_strengths: "Analytical rigor, structured problem solving",
+          created_at: new Date().toISOString(),
+        },
+      ];
+    }
+  },
+
+  getAdaptiveRoadmap: async () => {
+    try {
+      return await apiRequest<any>("/api/personalization/roadmap");
+    } catch {
+      return null;
+    }
+  },
+
+  generateAdaptiveRoadmap: async (payload: {
+    variant?: string;
+    target_role?: string;
+    target_industry?: string;
+    pace?: string;
+    weekly_hours?: number;
+  }) => {
+    return await apiRequest<any>("/api/personalization/roadmap/generate", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  updateRoadmapTask: async (
+    roadmapId: string,
+    taskId: string,
+    payload: {
+      completed: boolean;
+      evidence_url?: string;
+      notes?: string;
+    }
+  ) => {
+    return await apiRequest<any>(`/api/personalization/roadmap/${roadmapId}/tasks/${taskId}`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  toggleRoadmapPause: async (roadmapId: string) => {
+    return await apiRequest<any>(`/api/personalization/roadmap/${roadmapId}/toggle-pause`, {
+      method: "POST",
+    });
+  },
+};
+
 
 
 

@@ -80,12 +80,6 @@ export function CareerPassportModal({
   const [evidenceSource, setEvidenceSource] = useState("");
   const [evidenceNotes, setEvidenceNotes] = useState("");
 
-  useEffect(() => {
-    if (isOpen) {
-      loadAllPassportData();
-    }
-  }, [isOpen]);
-
   const loadAllPassportData = async () => {
     setIsLoading(true);
     setFeedback(null);
@@ -122,6 +116,14 @@ export function CareerPassportModal({
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      queueMicrotask(() => {
+        void loadAllPassportData();
+      });
+    }
+  }, [isOpen]);
 
   const handleSavePrivacy = async () => {
     setIsSaving(true);

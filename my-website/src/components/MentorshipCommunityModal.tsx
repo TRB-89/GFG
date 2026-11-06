@@ -50,21 +50,20 @@ export function MentorshipCommunityModal({
   currentUser,
 }: MentorshipCommunityModalProps) {
   const [activeTab, setActiveTab] = useState<"mentors" | "sessions" | "circles" | "interview" | "safety">(initialTab);
-  const [candidateId, setCandidateId] = useState<string | null>(null);
+  const [candidateId, setCandidateId] = useState<string | null>(
+    () => currentUser?.candidate_profile?.id || currentUser?.id || null
+  );
 
   useEffect(() => {
     if (!isOpen) return;
-    if (currentUser?.candidate_profile?.id) {
-      setCandidateId(currentUser.candidate_profile.id);
-    } else if (currentUser?.id) {
-      setCandidateId(currentUser.id);
-    } else {
-      api.getCandidateProfile()
-        .then((prof: any) => {
-          if (prof?.id) setCandidateId(prof.id);
-        })
-        .catch(() => {});
-    }
+    if (currentUser?.candidate_profile?.id || currentUser?.id) return;
+    let isMounted = true;
+    api.getCandidateProfile()
+      .then((prof: any) => {
+        if (isMounted && prof?.id) setCandidateId(prof.id);
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
   }, [isOpen, currentUser]);
 
   // Mentor directory state
@@ -123,6 +122,12 @@ export function MentorshipCommunityModal({
   const [blockUserIdInput, setBlockUserIdInput] = useState("");
 
   // Data loading
+  const loadDiscussions = (circleId: string) => {
+    communityEcosystemApi.getCircleDiscussions(circleId)
+      .then(res => setCircleDiscussions(res.discussions || []))
+      .catch(() => {});
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -165,12 +170,6 @@ export function MentorshipCommunityModal({
       .then(res => setGuidelines(res.guidelines))
       .catch(() => {});
   }, [isOpen, fieldFilter, languageFilter, formatFilter, searchQuery, circleIndustryFilter]);
-
-  const loadDiscussions = (circleId: string) => {
-    communityEcosystemApi.getCircleDiscussions(circleId)
-      .then(res => setCircleDiscussions(res.discussions || []))
-      .catch(() => {});
-  };
 
   if (!isOpen) return null;
 

@@ -49,6 +49,8 @@ class VisibilitySettingsRequest(BaseModel):
     show_practical_assessments: bool = True
     show_mentor_feedback: bool = True
     show_career_preferences: bool = True
+    is_discoverable_by_employers: Optional[bool] = None
+    anonymous_in_discovery: Optional[bool] = None
 
 
 class CreateGrantRequest(BaseModel):
@@ -107,7 +109,14 @@ async def update_passport_visibility(
             detail="Candidate profile record not found."
         )
 
-    new_settings = req.model_dump()
+    if req.is_discoverable_by_employers is not None:
+        cand.is_discoverable_by_employers = req.is_discoverable_by_employers
+    if req.anonymous_in_discovery is not None:
+        cand.anonymous_in_discovery = req.anonymous_in_discovery
+    db.commit()
+    db.refresh(cand)
+
+    new_settings = req.model_dump(exclude_unset=True)
     passport_data = build_verified_career_passport_data(
         cand=cand,
         db=db,
@@ -402,7 +411,7 @@ async def view_shared_passport(
     if not grant or grant.status != "active":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="This Career Passport link is invalid or access has been revoked by the candidate."
+            detail="This Career Passport link is invalid or access has been revoked by the candidate. Note: files previously downloaded to local devices cannot be remotely deleted."
         )
 
     # Check expiration

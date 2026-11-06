@@ -7,6 +7,7 @@ class ErrorDetail(BaseModel):
     code: str
     message: str
     details: Optional[Any] = None
+    request_id: Optional[str] = None
 
 class StandardResponse(BaseModel, Generic[T]):
     success: bool = True
@@ -23,13 +24,16 @@ class PaginatedResponse(BaseModel, Generic[T]):
 def success_response(data: Any = None) -> Dict[str, Any]:
     return {"success": True, "data": data, "error": None}
 
-def error_response(code: str, message: str, details: Any = None) -> Dict[str, Any]:
+def error_response(code: str, message: str, details: Any = None, request_id: Optional[str] = None) -> Dict[str, Any]:
+    err: Dict[str, Any] = {
+        "code": code,
+        "message": message,
+        "details": details
+    }
+    if request_id:
+        err["request_id"] = request_id
     return {
         "success": False,
         "data": None,
-        "error": {
-            "code": code,
-            "message": message,
-            "details": details
-        }
+        "error": err
     }

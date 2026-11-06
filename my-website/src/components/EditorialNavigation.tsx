@@ -20,6 +20,7 @@ import {
   DollarSign,
   BarChart3,
   WifiOff,
+  Heart,
 } from "lucide-react";
 import { useTranslation, SupportedLocale, LOCALE_NAMES } from "@/lib/i18n/LanguageContext";
 import { useBandwidth } from "@/lib/bandwidth/BandwidthContext";
@@ -52,6 +53,7 @@ interface EditorialNavigationProps {
   onOpenEmployerDesk?: (tab?: "dashboard" | "candidates" | "builder" | "toolkit" | "analytics" | "verification") => void;
   onOpenGovernmentPilot?: (tab?: "dashboard" | "design" | "schemes" | "sdg" | "reporting" | "presentation") => void;
   onOpenLearningHub?: () => void;
+  onOpenConfidence?: () => void;
   onSwitchRole: (role: PlatformRole) => void;
   onLogout?: () => void;
 }
@@ -75,6 +77,7 @@ export function EditorialNavigation({
   onOpenEmployerDesk,
   onOpenGovernmentPilot,
   onOpenLearningHub,
+  onOpenConfidence,
   onSwitchRole,
   onLogout,
 }: EditorialNavigationProps) {
@@ -272,6 +275,23 @@ export function EditorialNavigation({
 
               {moreMenuOpen && (
                 <div className="absolute left-0 mt-3 w-64 bg-[#140D09] border border-[#D97706]/25 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {onOpenConfidence && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenConfidence();
+                        setMoreMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-[#20140E] text-[#F5EDE4] hover:text-[#B6C899] transition-colors flex items-center gap-2.5 text-xs font-normal"
+                    >
+                      <Heart className="w-4 h-4 text-[#B6C899]" />
+                      <div>
+                        <p className="font-medium">Confidence Journal</p>
+                        <p className="text-[10px] text-[#A89B90] normal-case">Action milestones &amp; growth check-in</p>
+                      </div>
+                    </button>
+                  )}
+
                   {onOpenGovernmentPilot && (
                     <button
                       type="button"

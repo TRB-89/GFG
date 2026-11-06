@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 import { SupportedLocale, TRANSLATIONS } from "./translations";
 
 export type { SupportedLocale };
@@ -27,38 +27,72 @@ export const LOCALE_NAMES: Record<SupportedLocale, { label: string; native: stri
   hi: { label: "Hindi", native: "हिंदी" },
 };
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<SupportedLocale>("en");
+let listeners: Array<() => void> = [];
+function emitChange() {
+  for (const listener of listeners) {
+    listener();
+  }
+}
 
-  useEffect(() => {
+const languageStore = {
+  subscribe(listener: () => void) {
+    listeners = [...listeners, listener];
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "gfg_preferred_language") listener();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", handleStorage);
+    }
+    return () => {
+      listeners = listeners.filter((l) => l !== listener);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("storage", handleStorage);
+      }
+    };
+  },
+  getSnapshot(): SupportedLocale {
+    if (typeof window === "undefined") return "en";
     try {
       const saved = localStorage.getItem("gfg_preferred_language") as SupportedLocale;
-      if (saved && (saved === "en" || saved === "ta" || saved === "hi")) {
-        setLocaleState(saved);
-        applyDocumentLanguage(saved);
+      if (saved === "en" || saved === "ta" || saved === "hi") {
+        return saved;
       }
     } catch {
-      // localStorage unavailable or server render
+      // ignore
     }
-  }, []);
-
-  const applyDocumentLanguage = (loc: SupportedLocale) => {
-    if (typeof document !== "undefined") {
-      document.documentElement.lang = loc;
-      // Add language-specific typography helper classes for proper line height & rendering
-      document.documentElement.classList.remove("font-lang-en", "font-lang-ta", "font-lang-hi");
-      document.documentElement.classList.add(`font-lang-${loc}`);
-    }
-  };
-
-  const setLocale = (loc: SupportedLocale) => {
-    setLocaleState(loc);
-    applyDocumentLanguage(loc);
+    return "en";
+  },
+  getServerSnapshot(): SupportedLocale {
+    return "en";
+  },
+  setLocale(loc: SupportedLocale) {
     try {
       localStorage.setItem("gfg_preferred_language", loc);
     } catch (e) {
       console.warn("Could not save language preference to localStorage", e);
     }
+    emitChange();
+  },
+};
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const locale = useSyncExternalStore(
+    languageStore.subscribe,
+    languageStore.getSnapshot,
+    languageStore.getServerSnapshot
+  );
+
+  // Synchronize document attributes with active locale
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = locale;
+      document.documentElement.classList.remove("font-lang-en", "font-lang-ta", "font-lang-hi");
+      document.documentElement.classList.add(`font-lang-${locale}`);
+    }
+  }, [locale]);
+
+  const setLocale = (loc: SupportedLocale) => {
+    languageStore.setLocale(loc);
   };
 
   const t = (key: string, fallback?: string): string => {
@@ -79,7 +113,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useTranslation = () => useContext(LanguageContext);
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error("useLanguage must be used within a LanguageProvider");
+  }
+  return context;
+}
+
+export const useTranslation = useLanguage;
 
 export function AiTranslationDisclaimer({ className = "" }: { className?: string }) {
   const { isAiTranslated, t } = useTranslation();

@@ -8,7 +8,7 @@ interface BandwidthContextType {
   toggleLowBandwidthMode: () => void;
   isOnline: boolean;
   cachedContentCount: number;
-  cacheItem: (key: string, data: any) => void;
+  cacheItem: (key: string, data: unknown) => void;
   getCachedItem: <T>(key: string) => T | null;
   clearCache: () => void;
 }
@@ -27,51 +27,63 @@ const BandwidthContext = createContext<BandwidthContextType>({
 const CACHE_PREFIX = "gfg_cached_content_";
 
 export function BandwidthProvider({ children }: { children: React.ReactNode }) {
-  const [lowBandwidthMode, setLowBandwidthState] = useState<boolean>(false);
-  const [isOnline, setIsOnline] = useState<boolean>(true);
-  const [cachedContentCount, setCachedContentCount] = useState<number>(0);
+  const [lowBandwidthMode, setLowBandwidthState] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const savedMode = localStorage.getItem("gfg_low_bandwidth_mode");
+      if (savedMode !== null) return savedMode === "true";
+      const nav = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } };
+      return nav.connection?.saveData === true || nav.connection?.effectiveType === "2g";
+    } catch {
+      return false;
+    }
+  });
+
+  const [isOnline, setIsOnline] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return navigator.onLine;
+  });
+
+  const [cachedContentCount, setCachedContentCount] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      let count = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(CACHE_PREFIX)) {
+          count++;
+        }
+      }
+      return count;
+    } catch {
+      return 0;
+    }
+  });
+
+  // Synchronize document classes with low bandwidth mode
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (lowBandwidthMode) {
+      document.documentElement.classList.add("bandwidth-low");
+    } else {
+      document.documentElement.classList.remove("bandwidth-low");
+    }
+  }, [lowBandwidthMode]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Detect online/offline
-    setIsOnline(navigator.onLine);
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    // Detect browser Data-Saver or slow connection
-    try {
-      const savedMode = localStorage.getItem("gfg_low_bandwidth_mode");
-      const nav = navigator as any;
-      const systemSaveData = nav.connection?.saveData === true || nav.connection?.effectiveType === "2g";
-
-      const initialVal = savedMode !== null ? savedMode === "true" : systemSaveData;
-      setLowBandwidthState(initialVal);
-      applyBandwidthClass(initialVal);
-    } catch {
-      // Safe fallback
-    }
-
-    // Count cached items
-    updateCacheCount();
-
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
-
-  const applyBandwidthClass = (active: boolean) => {
-    if (typeof document === "undefined") return;
-    if (active) {
-      document.documentElement.classList.add("bandwidth-low");
-    } else {
-      document.documentElement.classList.remove("bandwidth-low");
-    }
-  };
 
   const updateCacheCount = () => {
     try {
@@ -90,7 +102,6 @@ export function BandwidthProvider({ children }: { children: React.ReactNode }) {
 
   const setLowBandwidthMode = (val: boolean) => {
     setLowBandwidthState(val);
-    applyBandwidthClass(val);
     try {
       localStorage.setItem("gfg_low_bandwidth_mode", String(val));
     } catch (e) {
@@ -100,7 +111,7 @@ export function BandwidthProvider({ children }: { children: React.ReactNode }) {
 
   const toggleLowBandwidthMode = () => setLowBandwidthMode(!lowBandwidthMode);
 
-  const cacheItem = (key: string, data: any) => {
+  const cacheItem = (key: string, data: unknown) => {
     try {
       localStorage.setItem(`${CACHE_PREFIX}${key}`, JSON.stringify({
         data,

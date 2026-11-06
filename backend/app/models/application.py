@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, UniqueConstraint, JSON
 from sqlalchemy.orm import relationship
 from backend.app.models.base import Base, generate_uuid, utc_now
 
@@ -8,9 +8,10 @@ class Application(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     candidate_id = Column(String(36), ForeignKey("candidate_profiles.id", ondelete="CASCADE"), nullable=False)
     job_id = Column(String(36), ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False)
-    status = Column(String(50), nullable=False, default="submitted") # submitted, under_review, shortlisted, interview, selected, rejected, withdrawn
+    status = Column(String(50), nullable=False, default="submitted") # submitted, under_review, shortlisted, interview, offer, hired, rejected, withdrawn
     cover_note = Column(Text, nullable=True)
     resume_url = Column(Text, nullable=True)
+    status_history = Column(JSON, nullable=True) # [{"status": "...", "timestamp": "...", "reviewer": "...", "notes": "..."}]
     applied_at = Column(DateTime, default=utc_now)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 

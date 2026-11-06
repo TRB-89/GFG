@@ -20,13 +20,19 @@ export function WebGLDistortionTransition({
 }: WebGLDistortionTransitionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [webglSupported, setWebglSupported] = useState<boolean>(true);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-  }, []);
+  const [webglSupported, setWebglSupported] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const testCanvas = document.createElement("canvas");
+      return !!(testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl"));
+    } catch {
+      return false;
+    }
+  });
+  const [prefersReducedMotion] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
 
   useEffect(() => {
     if (!canvasRef.current || prefersReducedMotion) return;
@@ -192,7 +198,7 @@ export function WebGLDistortionTransition({
       };
     } catch (err) {
       console.warn("WebGL distortion initialized fallback", err);
-      setWebglSupported(false);
+      queueMicrotask(() => setWebglSupported(false));
     }
   }, [prefersReducedMotion]);
 

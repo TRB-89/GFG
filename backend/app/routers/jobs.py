@@ -484,6 +484,30 @@ def create_job(
         js = JobSkill(job_id=job.id, skill_id=s_id, importance="preferred", required=False)
         db.add(js)
 
+    # Support skill names passed directly in required_skills / preferred_skills
+    for s_name in (req.required_skills or []):
+        s_clean = s_name.strip()
+        skill_obj = db.query(Skill).filter(Skill.name.ilike(s_clean)).first()
+        if not skill_obj:
+            skill_obj = Skill(name=s_clean, category="Technical")
+            db.add(skill_obj)
+            db.flush()
+        # Avoid duplicate JobSkill
+        existing_js = db.query(JobSkill).filter(JobSkill.job_id == job.id, JobSkill.skill_id == skill_obj.id).first()
+        if not existing_js:
+            db.add(JobSkill(job_id=job.id, skill_id=skill_obj.id, importance="required", required=True))
+
+    for s_name in (req.preferred_skills or []):
+        s_clean = s_name.strip()
+        skill_obj = db.query(Skill).filter(Skill.name.ilike(s_clean)).first()
+        if not skill_obj:
+            skill_obj = Skill(name=s_clean, category="Technical")
+            db.add(skill_obj)
+            db.flush()
+        existing_js = db.query(JobSkill).filter(JobSkill.job_id == job.id, JobSkill.skill_id == skill_obj.id).first()
+        if not existing_js:
+            db.add(JobSkill(job_id=job.id, skill_id=skill_obj.id, importance="preferred", required=False))
+
     db.commit()
     db.refresh(job)
     return success_response(format_job_item(job, None, db))

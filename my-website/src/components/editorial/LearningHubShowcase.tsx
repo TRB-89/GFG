@@ -127,7 +127,7 @@ export function LearningHubShowcase({ onOpenLearningHub }: LearningHubShowcasePr
                     }`}
                   >
                     <span className={`text-[10px] ${isActive ? "text-orange-400 font-bold" : "text-[#7a6d62]"}`}>
-                      COURSE 0{idx + 1} //
+                      {`COURSE 0${idx + 1} //`}
                     </span>
                     <span className="font-sans font-medium text-xs truncate">
                       {c.title}

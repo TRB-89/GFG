@@ -191,7 +191,7 @@ export function CinematicFeaturesSection({
                 <div className="space-y-6 relative z-10">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono tracking-widest text-orange-400 font-semibold">
-                      {feature.num} //
+                      {`${feature.num} //`}
                     </span>
                     <span className="px-3 py-1 rounded-full text-[10px] font-mono tracking-wider bg-orange-500/10 border border-orange-500/20 text-orange-300">
                       {feature.badge}
