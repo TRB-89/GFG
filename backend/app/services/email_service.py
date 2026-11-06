@@ -1,3 +1,4 @@
+import os
 import logging
 import httpx
 from typing import Optional, Dict, Any
@@ -13,19 +14,23 @@ class EmailService:
     async def _send_resend_email(self, to: str, subject: str, html: str) -> Dict[str, Any]:
         """
         Sends an email using Resend REST API (https://api.resend.com/emails).
+        Handles retries for transient server errors, and cleanly reports disabled status
+        without falsely claiming email delivery when RESEND_API_KEY is unset.
         """
-        if not self.api_key:
-            logger.info(f"[EmailService Fallback] No RESEND_API_KEY set. Simulated email to {to}: {subject}")
+        api_key = self.api_key or os.getenv("RESEND_API_KEY", "") or getattr(settings, "RESEND_API_KEY", "")
+        if not api_key:
+            logger.info(f"[EmailService] No RESEND_API_KEY configured. Email delivery disabled for {to}: {subject}")
             return {
-                "id": "simulated_email_id",
-                "status": "simulated",
+                "id": None,
+                "status": "disabled",
+                "message": "Email delivery disabled: RESEND_API_KEY is not configured.",
                 "to": to,
                 "subject": subject
             }
 
         url = "https://api.resend.com/emails"
         headers = {
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
         payload = {
@@ -35,26 +40,55 @@ class EmailService:
             "html": html
         }
 
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                res = await client.post(url, headers=headers, json=payload)
-                if res.status_code in (200, 201):
-                    data = res.json()
-                    logger.info(f"Email sent via Resend to {to}: id={data.get('id')}")
-                    return data
-                else:
-                    logger.warning(f"Resend error {res.status_code}: {res.text}")
-                    return {
-                        "error": res.text,
-                        "status_code": res.status_code,
-                        "status": "failed"
-                    }
-        except Exception as e:
-            logger.error(f"Failed to dispatch email via Resend: {e}")
-            return {
-                "error": str(e),
-                "status": "exception"
-            }
+        max_retries = 2
+        for attempt in range(1, max_retries + 1):
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    res = await client.post(url, headers=headers, json=payload)
+                    if res.status_code in (200, 201):
+                        data = res.json()
+                        provider_id = data.get("id")
+                        logger.info(f"Email sent via Resend to {to}: id={provider_id}")
+                        return {
+                            "id": provider_id,
+                            "status": "delivered",
+                            "to": to,
+                            "subject": subject
+                        }
+                    elif res.status_code >= 500 and attempt < max_retries:
+                        logger.warning(f"Resend server error {res.status_code}, retrying attempt {attempt + 1}...")
+                        continue
+                    else:
+                        logger.warning(f"Resend error {res.status_code}: {res.text}")
+                        return {
+                            "id": None,
+                            "status": "failed",
+                            "status_code": res.status_code,
+                            "error": res.text
+                        }
+            except (httpx.TimeoutException, httpx.NetworkError) as e:
+                if attempt < max_retries:
+                    logger.warning(f"Resend network error {e}, retrying attempt {attempt + 1}...")
+                    continue
+                logger.error(f"Failed to dispatch email via Resend after {attempt} attempts: {e}")
+                return {
+                    "id": None,
+                    "status": "failed",
+                    "error": str(e)
+                }
+            except Exception as e:
+                logger.error(f"Unexpected email exception: {e}")
+                return {
+                    "id": None,
+                    "status": "failed",
+                    "error": str(e)
+                }
+
+        return {
+            "id": None,
+            "status": "failed",
+            "error": "Exceeded maximum delivery retries."
+        }
 
     async def send_certificate_email(
         self,

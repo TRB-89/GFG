@@ -40,16 +40,19 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     # Check if user already exists
     existing = db.query(Profile).filter(Profile.email == req.email.lower()).first()
     if existing:
-        return error_response("EMAIL_ALREADY_EXISTS", "An account with this email address already exists.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "EMAIL_ALREADY_EXISTS", "message": "An account with this email address already exists."}
+        )
 
     # Enforce elevated privilege protection per Module 2 Security requirements
     # Public registration only activates standard candidate privileges immediately.
     # Elevated employer, mentor, or administrator roles require explicit administrative approval.
     requested_role = req.account_type.lower()
     if requested_role in ["admin", "administrator"]:
-        return error_response(
-            "RESTRICTED_ROLE",
-            "Administrator privileges cannot be granted through public registration. Contact platform governance."
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "RESTRICTED_ROLE", "message": "Administrator privileges cannot be granted through public registration. Contact platform governance."}
         )
 
     assigned_role = requested_role
@@ -158,10 +161,16 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
         db.refresh(user)
 
     if not user or not user.password_hash:
-        return error_response("INVALID_CREDENTIALS", "Invalid email or password.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "INVALID_CREDENTIALS", "message": "Invalid email or password."}
+        )
 
     if not verify_password(req.password, user.password_hash):
-        return error_response("INVALID_CREDENTIALS", "Invalid email or password.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "INVALID_CREDENTIALS", "message": "Invalid email or password."}
+        )
 
     token = create_access_token({"sub": user.id, "email": user.email, "role": user.role})
     user_data = format_user_profile(user)

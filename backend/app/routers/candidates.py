@@ -16,6 +16,7 @@ from backend.app.schemas.candidate import (
     OnboardingDraftSaveRequest,
     OnboardingDraftResponse,
     OnboardingCompleteRequest,
+    ProjectCreate,
 )
 from backend.app.schemas.common import success_response, error_response
 from backend.app.middleware.auth_middleware import get_current_user, require_role
@@ -83,8 +84,11 @@ def format_candidate_details(cand: CandidateProfile, user: Profile, is_employer_
             "title": p.title,
             "description": p.description,
             "technologies": p.technologies,
+            "technologies_used": [t.strip() for t in p.technologies.split(",") if t.strip()] if p.technologies else [],
             "project_url": p.project_url,
+            "project_link": p.project_url,
             "github_url": p.github_url,
+            "repository_link": p.github_url,
             "year_completed": getattr(p, "year_completed", None),
             "skills_demonstrated": getattr(p, "skills_demonstrated", None),
         }
@@ -324,18 +328,31 @@ def complete_onboarding(
         cand.portfolio_url = req.portfolio_url
 
     # Save Projects
-    if req.projects:
+    if req.projects is not None:
+        db.query(CandidateProject).filter(CandidateProject.candidate_id == cand.id).delete()
         for p in req.projects:
             if isinstance(p, dict) and p.get("title"):
+                raw_tech = p.get("technologies") or p.get("technologies_used")
+                if isinstance(raw_tech, list):
+                    tech_str = ", ".join(str(t).strip() for t in raw_tech if t)
+                else:
+                    tech_str = str(raw_tech or "").strip()
+
+                raw_skills = p.get("skills_demonstrated")
+                if isinstance(raw_skills, list):
+                    skills_str = ", ".join(str(s).strip() for s in raw_skills if s)
+                else:
+                    skills_str = str(raw_skills or "").strip() or None
+
                 proj = CandidateProject(
                     candidate_id=cand.id,
-                    title=p.get("title", "Project"),
-                    description=p.get("description", ""),
-                    technologies=p.get("technologies", ""),
-                    project_url=p.get("project_url"),
-                    github_url=p.get("github_url"),
+                    title=str(p.get("title", "Project")).strip(),
+                    description=p.get("description", "") or "",
+                    technologies=tech_str,
+                    project_url=p.get("project_url") or p.get("project_link"),
+                    github_url=p.get("github_url") or p.get("repository_link"),
                     year_completed=p.get("year_completed"),
-                    skills_demonstrated=p.get("skills_demonstrated")
+                    skills_demonstrated=skills_str
                 )
                 db.add(proj)
 
@@ -457,3 +474,147 @@ def delete_my_candidate_account(
     db.delete(current_user)
     db.commit()
     return success_response({"message": "Candidate account and personal records successfully deleted."})
+
+# ==============================================================================
+# CANDIDATE PORTFOLIO PROJECTS CRUD
+# ==============================================================================
+
+@router.post("/me/projects", status_code=status.HTTP_201_CREATED)
+def create_candidate_project(
+    req: ProjectCreate,
+    current_user: Profile = Depends(require_role(["candidate", "admin"])),
+    db: Session = Depends(get_db)
+):
+    """Create a new portfolio project for candidate."""
+    cand = current_user.candidate_profile
+    if not cand:
+        cand = CandidateProfile(user_id=current_user.id)
+        db.add(cand)
+        db.flush()
+
+    raw_tech = req.technologies or req.technologies_used
+    if isinstance(raw_tech, list):
+        tech_str = ", ".join(str(t).strip() for t in raw_tech if t)
+    else:
+        tech_str = str(raw_tech or "").strip()
+
+    raw_skills = req.skills_demonstrated
+    if isinstance(raw_skills, list):
+        skills_str = ", ".join(str(s).strip() for s in raw_skills if s)
+    else:
+        skills_str = str(raw_skills or "").strip() or None
+
+    proj = CandidateProject(
+        candidate_id=cand.id,
+        title=req.title.strip(),
+        description=req.description or "",
+        technologies=tech_str,
+        project_url=req.project_url or req.project_link,
+        github_url=req.github_url or req.repository_link,
+        year_completed=req.year_completed,
+        skills_demonstrated=skills_str
+    )
+    db.add(proj)
+    db.commit()
+    db.refresh(proj)
+    return success_response({
+        "id": proj.id,
+        "title": proj.title,
+        "description": proj.description,
+        "technologies": proj.technologies,
+        "technologies_used": [t.strip() for t in proj.technologies.split(",") if t.strip()] if proj.technologies else [],
+        "project_url": proj.project_url,
+        "project_link": proj.project_url,
+        "github_url": proj.github_url,
+        "repository_link": proj.github_url,
+        "year_completed": proj.year_completed,
+        "skills_demonstrated": proj.skills_demonstrated
+    })
+
+@router.put("/me/projects/{project_id}")
+def update_candidate_project(
+    project_id: str,
+    req: ProjectCreate,
+    current_user: Profile = Depends(require_role(["candidate", "admin"])),
+    db: Session = Depends(get_db)
+):
+    """Update an existing portfolio project."""
+    cand = current_user.candidate_profile
+    if not cand:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "PROFILE_NOT_FOUND", "message": "Candidate profile not found."}
+        )
+
+    proj = db.query(CandidateProject).filter(
+        CandidateProject.id == project_id,
+        CandidateProject.candidate_id == cand.id
+    ).first()
+    if not proj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "PROJECT_NOT_FOUND", "message": "Project not found or not owned by candidate."}
+        )
+
+    raw_tech = req.technologies or req.technologies_used
+    if isinstance(raw_tech, list):
+        tech_str = ", ".join(str(t).strip() for t in raw_tech if t)
+    else:
+        tech_str = str(raw_tech or "").strip()
+
+    proj.title = req.title.strip()
+    proj.description = req.description or ""
+    proj.technologies = tech_str
+    proj.project_url = req.project_url or req.project_link
+    proj.github_url = req.github_url or req.repository_link
+    if req.year_completed is not None:
+        proj.year_completed = req.year_completed
+    if req.skills_demonstrated is not None:
+        if isinstance(req.skills_demonstrated, list):
+            proj.skills_demonstrated = ", ".join(str(s).strip() for s in req.skills_demonstrated if s)
+        else:
+            proj.skills_demonstrated = str(req.skills_demonstrated or "").strip() or None
+
+    db.commit()
+    db.refresh(proj)
+    return success_response({
+        "id": proj.id,
+        "title": proj.title,
+        "description": proj.description,
+        "technologies": proj.technologies,
+        "technologies_used": [t.strip() for t in proj.technologies.split(",") if t.strip()] if proj.technologies else [],
+        "project_url": proj.project_url,
+        "project_link": proj.project_url,
+        "github_url": proj.github_url,
+        "repository_link": proj.github_url,
+        "year_completed": proj.year_completed,
+        "skills_demonstrated": proj.skills_demonstrated
+    })
+
+@router.delete("/me/projects/{project_id}")
+def delete_candidate_project(
+    project_id: str,
+    current_user: Profile = Depends(require_role(["candidate", "admin"])),
+    db: Session = Depends(get_db)
+):
+    """Delete a portfolio project."""
+    cand = current_user.candidate_profile
+    if not cand:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "PROFILE_NOT_FOUND", "message": "Candidate profile not found."}
+        )
+
+    proj = db.query(CandidateProject).filter(
+        CandidateProject.id == project_id,
+        CandidateProject.candidate_id == cand.id
+    ).first()
+    if not proj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "PROJECT_NOT_FOUND", "message": "Project not found or not owned by candidate."}
+        )
+
+    db.delete(proj)
+    db.commit()
+    return success_response({"message": "Project deleted successfully."})

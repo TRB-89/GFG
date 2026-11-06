@@ -33,21 +33,39 @@ import {
   MessageCircleQuestion,
   ExternalLink,
 } from "lucide-react";
-import { communityEcosystemApi } from "@/lib/api";
+import { api, communityEcosystemApi } from "@/lib/api";
 import { DataClassificationBadge } from "./DataClassificationBadge";
 
 interface MentorshipCommunityModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialTab?: "mentors" | "sessions" | "circles" | "interview" | "safety";
+  currentUser?: any;
 }
 
 export function MentorshipCommunityModal({
   isOpen,
   onClose,
   initialTab = "mentors",
+  currentUser,
 }: MentorshipCommunityModalProps) {
   const [activeTab, setActiveTab] = useState<"mentors" | "sessions" | "circles" | "interview" | "safety">(initialTab);
+  const [candidateId, setCandidateId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (currentUser?.candidate_profile?.id) {
+      setCandidateId(currentUser.candidate_profile.id);
+    } else if (currentUser?.id) {
+      setCandidateId(currentUser.id);
+    } else {
+      api.getCandidateProfile()
+        .then((prof: any) => {
+          if (prof?.id) setCandidateId(prof.id);
+        })
+        .catch(() => {});
+    }
+  }, [isOpen, currentUser]);
 
   // Mentor directory state
   const [mentors, setMentors] = useState<any[]>([]);
@@ -157,13 +175,15 @@ export function MentorshipCommunityModal({
   if (!isOpen) return null;
 
   // Handle Session Booking Request
+  const activeCandidateId = candidateId || currentUser?.id || "candidate-authenticated";
+
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMentorForBooking) return;
     setBookingSubmitting(true);
     try {
       const res = await communityEcosystemApi.requestSession({
-        candidate_id: "demo-candidate-priya",
+        candidate_id: activeCandidateId,
         mentor_id: selectedMentorForBooking.id,
         topic: bookingTopic,
         goals: bookingGoals,
@@ -172,7 +192,7 @@ export function MentorshipCommunityModal({
       });
       setBookingSuccessMsg(res.message || "Request submitted! Awaiting mentor confirmation.");
       // Refresh sessions
-      const sessRes = await communityEcosystemApi.getSessions();
+      const sessRes = await communityEcosystemApi.getSessions(activeCandidateId);
       setSessions(sessRes.sessions || []);
       setTimeout(() => {
         setSelectedMentorForBooking(null);
@@ -189,14 +209,14 @@ export function MentorshipCommunityModal({
   // Handle Session Response (Accept/Decline simulation)
   const handleSessionAction = async (sessionId: string, action: "confirm" | "decline") => {
     await communityEcosystemApi.respondToSession(sessionId, action);
-    const updated = await communityEcosystemApi.getSessions();
+    const updated = await communityEcosystemApi.getSessions(activeCandidateId);
     setSessions(updated.sessions || []);
   };
 
   // Save private notes
   const handleSavePrivateNotes = async (sessionId: string) => {
     await communityEcosystemApi.updateSessionNotes(sessionId, privateNotesText);
-    const updated = await communityEcosystemApi.getSessions();
+    const updated = await communityEcosystemApi.getSessions(activeCandidateId);
     setSessions(updated.sessions || []);
     setEditingNotesSessionId(null);
   };
@@ -204,7 +224,7 @@ export function MentorshipCommunityModal({
   // Submit feedback
   const handleSubmitFeedback = async (sessionId: string) => {
     await communityEcosystemApi.submitSessionFeedback(sessionId, feedbackRating, feedbackComment);
-    const updated = await communityEcosystemApi.getSessions();
+    const updated = await communityEcosystemApi.getSessions(activeCandidateId);
     setSessions(updated.sessions || []);
     setFeedbackSessionId(null);
   };
@@ -212,10 +232,10 @@ export function MentorshipCommunityModal({
   // Join/Leave Circle
   const handleToggleJoinCircle = async (circleId: string) => {
     if (joinedCircleIds.includes(circleId)) {
-      await communityEcosystemApi.leaveCircle(circleId, "demo-candidate-priya");
+      await communityEcosystemApi.leaveCircle(circleId, activeCandidateId);
       setJoinedCircleIds(joinedCircleIds.filter(id => id !== circleId));
     } else {
-      await communityEcosystemApi.joinCircle(circleId, "demo-candidate-priya");
+      await communityEcosystemApi.joinCircle(circleId, activeCandidateId);
       setJoinedCircleIds([...joinedCircleIds, circleId]);
     }
     const res = await communityEcosystemApi.getCircles({ industry: circleIndustryFilter });
@@ -227,7 +247,7 @@ export function MentorshipCommunityModal({
     e.preventDefault();
     if (!selectedCircle || !newDiscussionTitle.trim() || !newDiscussionContent.trim()) return;
     await communityEcosystemApi.createCircleDiscussion(selectedCircle.id, {
-      candidate_id: "demo-candidate-priya",
+      candidate_id: activeCandidateId,
       title: newDiscussionTitle,
       content: newDiscussionContent,
       category: newDiscussionCategory,
@@ -242,7 +262,7 @@ export function MentorshipCommunityModal({
     setEvaluating(true);
     try {
       const res = await communityEcosystemApi.evaluateInterview({
-        candidate_id: "demo-candidate-priya",
+        candidate_id: activeCandidateId,
         track: selectedTrackId,
         question: selectedQuestion,
         candidate_answer: candidateAnswer,
@@ -261,7 +281,7 @@ export function MentorshipCommunityModal({
     e.preventDefault();
     if (!reportTargetId.trim() || !reportDescription.trim()) return;
     const res = await communityEcosystemApi.submitReport({
-      reporter_id: "demo-candidate-priya",
+      reporter_id: activeCandidateId,
       target_type: reportTargetType,
       target_id: reportTargetId,
       reason: reportReason,
@@ -278,7 +298,7 @@ export function MentorshipCommunityModal({
     e.preventDefault();
     if (!blockUserIdInput.trim()) return;
     await communityEcosystemApi.blockUser({
-      blocker_id: "demo-candidate-priya",
+      blocker_id: activeCandidateId,
       blocked_id: blockUserIdInput.trim(),
     });
     setBlockedUserIds([...blockedUserIds, blockUserIdInput.trim()]);
@@ -404,7 +424,7 @@ export function MentorshipCommunityModal({
                         Personalized Mentor Recommendations
                       </h3>
                       <span className="text-[11px] text-[#A89886] font-mono">
-                        (Matched against Priya Sharma&apos;s Data Analytics target & skills)
+                        (Matched against {currentUser?.candidate_profile?.name || currentUser?.name || 'your profile'}&apos;s career target & skills)
                       </span>
                     </div>
                   </div>

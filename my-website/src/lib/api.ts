@@ -32,14 +32,101 @@ export const getAuthToken = (): string | null => {
   return authToken;
 };
 
-interface ApiError extends Error {
-  status?: number;
-  code?: string;
+export class ApiError extends Error {
+  status: number;
+  code: string;
   details?: unknown;
+  isNetworkError: boolean;
+
+  constructor(
+    message: string,
+    status = 500,
+    code = "INTERNAL_ERROR",
+    details?: unknown,
+    isNetworkError = false
+  ) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.details = details;
+    this.isNetworkError = isNetworkError;
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
 }
 
-// Safe API request with graceful HTML/404 handling
-async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export function buildUserFriendlyErrorMessage(
+  status: number,
+  rawMessage?: string,
+  rawCode?: string,
+  details?: unknown
+): { message: string; code: string } {
+  let code = rawCode || "API_ERROR";
+  let message = rawMessage || "";
+
+  // Sanitize message: never expose internal database or traceback strings to end users
+  const isInternalLeak = /traceback|sqlite|operationalerror|syntaxerror|select\s+|insert\s+|delete\s+|update\s+|foreign\s+key|password|secret|bearer/i.test(message);
+  if (isInternalLeak) {
+    message = "A server error occurred. Please try again later.";
+    code = "INTERNAL_ERROR";
+    return { message, code };
+  }
+
+  switch (status) {
+    case 400:
+      code = code === "API_ERROR" ? "BAD_REQUEST" : code;
+      message = message || "The request could not be processed. Please check your submission.";
+      break;
+    case 401:
+      code = code === "API_ERROR" ? "UNAUTHORIZED" : code;
+      message = message || "Authentication required. Please sign in to continue.";
+      break;
+    case 403:
+      code = code === "API_ERROR" ? "FORBIDDEN" : code;
+      message = message || "Access denied. You do not have permission to perform this action.";
+      break;
+    case 404:
+      code = code === "API_ERROR" ? "NOT_FOUND" : code;
+      message = message || "The requested item or resource could not be found.";
+      break;
+    case 409:
+      code = code === "API_ERROR" ? "CONFLICT" : code;
+      message = message || "A conflict occurred with an existing record. Please review your details.";
+      break;
+    case 422:
+      code = code === "API_ERROR" ? "VALIDATION_ERROR" : code;
+      if (Array.isArray(details) && details.length > 0) {
+        const fieldErrors = details
+          .map((d: any) => {
+            const loc = Array.isArray(d.loc) ? d.loc.filter((part: string) => part !== "body").join(".") : "";
+            return loc ? `${loc}: ${d.msg}` : d.msg;
+          })
+          .filter(Boolean);
+        if (fieldErrors.length > 0) {
+          message = fieldErrors.join("; ");
+        }
+      }
+      message = message || "Validation failed. Please verify that all required fields are correct.";
+      break;
+    case 429:
+      code = code === "API_ERROR" ? "RATE_LIMITED" : code;
+      message = "Too many requests. Please wait a moment and try again.";
+      break;
+    default:
+      if (status >= 500) {
+        code = code === "API_ERROR" ? "INTERNAL_SERVER_ERROR" : code;
+        message = "A server error occurred. Please try again later.";
+      } else if (!message) {
+        message = `Request failed with status ${status}.`;
+      }
+      break;
+  }
+
+  return { message, code };
+}
+
+// Safe API request with retry for safe idempotent requests and typed error handling
+export async function apiRequest<T>(endpoint: string, options: RequestInit = {}, retries = 0): Promise<T> {
   const token = getAuthToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -50,30 +137,80 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const method = (options.method || "GET").toUpperCase();
+  const isSafeMethod = method === "GET" || method === "HEAD";
 
-  const contentType = response.headers.get("content-type");
-  if (!response.ok || !contentType || !contentType.includes("application/json")) {
-    const errorMsg = `API request to ${endpoint} returned status ${response.status}`;
-    const err: ApiError = new Error(errorMsg);
-    err.status = response.status;
-    err.code = "API_UNAVAILABLE";
-    throw err;
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (networkError: unknown) {
+    if (isSafeMethod && retries < 1) {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      return apiRequest<T>(endpoint, options, retries + 1);
+    }
+    throw new ApiError(
+      "Unable to connect to the server. Please check your internet connection.",
+      0,
+      "NETWORK_ERROR",
+      networkError,
+      true
+    );
   }
 
-  const json = await response.json();
-  if (json.success === false) {
-    const errorMsg = json.error?.message || `Request failed with status ${response.status}`;
-    const err: ApiError = new Error(errorMsg);
-    err.code = json.error?.code || "REQUEST_FAILED";
-    err.details = json.error?.details;
-    throw err;
+  if (isSafeMethod && (response.status === 502 || response.status === 503 || response.status === 504) && retries < 1) {
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    return apiRequest<T>(endpoint, options, retries + 1);
   }
 
-  return json.data !== undefined ? json.data : json;
+  const contentType = response.headers.get("content-type") || "";
+  let data: any = null;
+  if (contentType.includes("application/json")) {
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+  }
+
+  if (!response.ok) {
+    let rawMsg: string | undefined;
+    let rawCode: string | undefined;
+    let rawDetails: unknown = undefined;
+
+    if (data) {
+      if (data.error && typeof data.error === "object") {
+        rawCode = data.error.code;
+        rawMsg = data.error.message;
+        rawDetails = data.error.details;
+      } else if (data.detail !== undefined) {
+        if (typeof data.detail === "string") {
+          rawMsg = data.detail;
+        } else if (Array.isArray(data.detail)) {
+          rawDetails = data.detail;
+        } else if (typeof data.detail === "object" && data.detail?.message) {
+          rawMsg = data.detail.message;
+          rawCode = data.detail.code;
+        }
+      } else if (typeof data.message === "string") {
+        rawMsg = data.message;
+      }
+    }
+
+    const { message, code } = buildUserFriendlyErrorMessage(response.status, rawMsg, rawCode, rawDetails);
+    throw new ApiError(message, response.status, code, rawDetails);
+  }
+
+  if (data && data.success === false) {
+    const rawMsg = data.error?.message || "Operation failed.";
+    const rawCode = data.error?.code || "REQUEST_FAILED";
+    const { message, code } = buildUserFriendlyErrorMessage(400, rawMsg, rawCode, data.error?.details);
+    throw new ApiError(message, 400, code, data.error?.details);
+  }
+
+  return (data?.data !== undefined ? data.data : data) as T;
 }
 
 // Built-in Demo Mock Data for Seamless Cloud / Offline Showcase
@@ -116,146 +253,102 @@ const DEMO_JOBS = [
 export const api = {
   // Authentication
   login: async (email: string, password: string) => {
-    try {
-      const res = await apiRequest<{ access_token: string; user: { id: string; full_name: string; email: string; role: string } }>("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
-      if (res?.access_token) {
-        setAuthToken(res.access_token);
-      }
-      return res;
-    } catch {
-      // Offline / Cloud Demo Fallback
-      const normalizedEmail = email.toLowerCase();
-      let user = {
-        id: DEMO_PERSONA.id,
-        full_name: DEMO_PERSONA.full_name,
-        email: DEMO_PERSONA.email,
-        role: "candidate",
-      };
-
-      if (normalizedEmail.includes("nova") || normalizedEmail.includes("hr")) {
-        user = {
-          id: DEMO_EMPLOYER.id,
-          full_name: "Nova Tech HR",
-          email: "hr@novatech.com",
-          role: "employer",
-        };
-      } else if (normalizedEmail.includes("mentor") || normalizedEmail.includes("meera")) {
-        user = {
-          id: DEMO_MENTOR.id,
-          full_name: DEMO_MENTOR.name,
-          email: "mentor@gfg.com",
-          role: "mentor",
-        };
-      } else if (normalizedEmail.includes("admin")) {
-        user = {
-          id: "admin-gfg-01",
-          full_name: "Platform Administrator",
-          email: "admin@gfg.com",
-          role: "admin",
-        };
-      }
-
-      setAuthToken("demo-auth-token-cloud");
-      return { access_token: "demo-auth-token-cloud", user };
+    const res = await apiRequest<{ access_token: string; user: { id: string; full_name: string; email: string; role: string } }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    if (res?.access_token) {
+      setAuthToken(res.access_token);
     }
+    return res;
   },
 
   register: async (full_name: string, email: string, password: string, account_type: "candidate" | "employer") => {
-    try {
-      const res = await apiRequest<{ access_token: string; user: { id: string; full_name: string; email: string; role: string } }>("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify({ full_name, email, password, account_type }),
-      });
-      if (res?.access_token) {
-        setAuthToken(res.access_token);
-      }
-      return res;
-    } catch {
-      const user = { id: "user-demo-new", full_name, email, role: account_type };
-      setAuthToken("demo-auth-token-cloud");
-      return { access_token: "demo-auth-token-cloud", user };
+    const res = await apiRequest<{ access_token: string; user: { id: string; full_name: string; email: string; role: string } }>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ full_name, email, password, account_type }),
+    });
+    if (res?.access_token) {
+      setAuthToken(res.access_token);
     }
+    return res;
   },
 
   forgotPassword: async (email: string) => {
-    try {
-      return await apiRequest<{ message: string }>("/api/auth/forgot-password", {
-        method: "POST",
-        body: JSON.stringify({ email }),
-      });
-    } catch {
-      return { message: `Password reset instructions sent to ${email}` };
-    }
+    return await apiRequest<{ message: string }>("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
   },
 
   logout: async () => {
     try {
       await apiRequest<unknown>("/api/auth/logout", { method: "POST" });
-    } catch {
-      // Ignored in offline demo
     } finally {
       setAuthToken(null);
     }
   },
 
   getMe: async () => {
-    try {
-      return await apiRequest<unknown>("/api/auth/me");
-    } catch {
-      return { id: DEMO_PERSONA.id, full_name: DEMO_PERSONA.full_name, email: DEMO_PERSONA.email };
-    }
+    return await apiRequest<unknown>("/api/auth/me");
   },
 
   // Candidate
   getCandidateDashboard: async () => {
-    try {
-      return await apiRequest<unknown>("/api/dashboard/candidate");
-    } catch {
-      return {
-        profile_completion: 88,
-        readiness_score: 82,
-        career_break: {
-          type: DEMO_PERSONA.break_type,
-          duration_months: DEMO_METRICS.breakDurationMonths,
-          duration_formatted: DEMO_METRICS.breakDurationFormatted,
-        },
-        pre_break_experience: DEMO_METRICS.preBreakFormatted,
-      };
-    }
+    return await apiRequest<unknown>("/api/dashboard/candidate");
   },
 
   getCandidateProfile: async () => {
-    try {
-      return await apiRequest<unknown>("/api/candidates/me");
-    } catch {
-      return {
-        id: DEMO_PERSONA.id,
-        full_name: DEMO_PERSONA.full_name,
-        email: DEMO_PERSONA.email,
-        headline: DEMO_PERSONA.headline,
-        years_experience: 4.5,
-        available_hours_per_day: DEMO_PERSONA.available_hours_per_day,
-        preferred_work_mode: DEMO_PERSONA.preferred_work_mode,
-        preferred_location: DEMO_PERSONA.location,
-        career_break_visibility: DEMO_PERSONA.privacy.profile_visibility,
-        skills: DEMO_PERSONA.skills,
-        meta: DEMO_PERSONA.meta,
-      };
-    }
+    return await apiRequest<unknown>("/api/candidates/me");
   },
 
   updateCandidateProfile: async (data: Record<string, unknown>) => {
-    try {
-      return await apiRequest<unknown>("/api/candidates/me", {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
-    } catch {
-      return { ...DEMO_PERSONA, ...data };
-    }
+    return await apiRequest<unknown>("/api/candidates/me", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  createCandidateProject: async (project: {
+    title: string;
+    description: string;
+    technologies?: string | string[];
+    technologies_used?: string[];
+    project_url?: string;
+    project_link?: string;
+    github_url?: string;
+    repository_link?: string;
+    year_completed?: number;
+    skills_demonstrated?: string[];
+  }) => {
+    return await apiRequest<any>("/api/candidates/me/projects", {
+      method: "POST",
+      body: JSON.stringify(project),
+    });
+  },
+
+  updateCandidateProject: async (projectId: string, project: {
+    title?: string;
+    description?: string;
+    technologies?: string | string[];
+    technologies_used?: string[];
+    project_url?: string;
+    project_link?: string;
+    github_url?: string;
+    repository_link?: string;
+    year_completed?: number;
+    skills_demonstrated?: string[];
+  }) => {
+    return await apiRequest<any>(`/api/candidates/me/projects/${projectId}`, {
+      method: "PUT",
+      body: JSON.stringify(project),
+    });
+  },
+
+  deleteCandidateProject: async (projectId: string) => {
+    return await apiRequest<{ success: boolean; message: string }>(`/api/candidates/me/projects/${projectId}`, {
+      method: "DELETE",
+    });
   },
 
   // Jobs
@@ -282,34 +375,14 @@ export const api = {
   },
 
   applyToJob: async (job_id: string, cover_note?: string) => {
-    try {
-      return await apiRequest<unknown>(`/api/jobs/${job_id}/apply`, {
-        method: "POST",
-        body: JSON.stringify({ cover_note: cover_note || "Excited to return to work through this track." }),
-      });
-    } catch {
-      return {
-        id: "app-demo-new",
-        job_id,
-        status: "submitted",
-        applied_at: new Date().toISOString(),
-      };
-    }
+    return await apiRequest<unknown>(`/api/jobs/${job_id}/apply`, {
+      method: "POST",
+      body: JSON.stringify({ cover_note: cover_note || "Excited to return to work through this track." }),
+    });
   },
 
   getMyApplications: async () => {
-    try {
-      return await apiRequest<Array<{ id: string; job_id: string; title: string; status: string }>>("/api/applications/me");
-    } catch {
-      return [
-        {
-          id: "app-1",
-          job_id: "job-demo-2",
-          title: "Cloud & DevOps Returnee Associate",
-          status: "under_review",
-        },
-      ];
-    }
+    return await apiRequest<Array<{ id: string; job_id: string; title: string; status: string }>>("/api/applications/me");
   },
 
   // Employer Desk
@@ -351,14 +424,10 @@ export const api = {
   },
 
   updateApplicationStatus: async (application_id: string, status: string) => {
-    try {
-      return await apiRequest<unknown>(`/api/applications/${application_id}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
-      });
-    } catch {
-      return { id: application_id, status };
-    }
+    return await apiRequest<unknown>(`/api/applications/${application_id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
   },
 
   // Admin
@@ -524,14 +593,10 @@ export const api = {
         JSON.stringify({ current_step, draft_data, updated_at: new Date().toISOString() })
       );
     }
-    try {
-      return await apiRequest<{ current_step: number; is_completed: boolean }>("/api/candidates/onboarding/draft", {
-        method: "POST",
-        body: JSON.stringify({ current_step, draft_data }),
-      });
-    } catch {
-      return { current_step, is_completed: false, status: "saved_locally" };
-    }
+    return await apiRequest<{ current_step: number; is_completed: boolean }>("/api/candidates/onboarding/draft", {
+      method: "POST",
+      body: JSON.stringify({ current_step, draft_data }),
+    });
   },
 
   completeOnboarding: async (payload: {
@@ -565,47 +630,31 @@ export const api = {
     projects?: Array<{
       title: string;
       description: string;
-      skills_demonstrated?: string[];
+      skills_demonstrated?: string[] | string;
+      technologies?: string | string[];
       technologies_used?: string[];
+      project_url?: string;
       project_link?: string;
+      github_url?: string;
       repository_link?: string;
       year_completed?: number;
     }>;
     support_preferences?: Record<string, unknown>;
   }) => {
+    const res = await apiRequest<{
+      message: string;
+      candidate_id: string;
+      passport_draft: unknown;
+      recommended_pathways: unknown[];
+    }>("/api/candidates/onboarding/complete", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
     if (typeof window !== "undefined") {
       localStorage.removeItem("gfg_onboarding_draft");
       localStorage.setItem("gfg_candidate_onboarded", "true");
     }
-    try {
-      return await apiRequest<{
-        message: string;
-        candidate_id: string;
-        passport_draft: unknown;
-        recommended_pathways: unknown[];
-      }>("/api/candidates/onboarding/complete", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      return {
-        message: "Profile and personalized career plan created successfully.",
-        candidate_id: "demo-cand-01",
-        passport_draft: {
-          target_title: payload.previous_job_title,
-          readiness_score: 82,
-          skills: payload.existing_skills,
-          visibility: payload.profile_visibility,
-        },
-        recommended_pathways: [
-          {
-            title: `${payload.previous_job_title} Returnship Pathway`,
-            match_percentage: 88,
-            duration_weeks: 8,
-          },
-        ],
-      };
-    }
+    return res;
   },
 
   getOnboardingAssessment: async (payload: {
@@ -690,13 +739,9 @@ export const api = {
     if (typeof window !== "undefined") {
       localStorage.removeItem("gfg_onboarding_draft");
     }
-    try {
-      return await apiRequest<{ success: boolean }>("/api/candidates/onboarding/draft", {
-        method: "DELETE",
-      });
-    } catch {
-      return { success: true };
-    }
+    return await apiRequest<{ success: boolean }>("/api/candidates/onboarding/draft", {
+      method: "DELETE",
+    });
   },
 
   uploadResume: async (file: File) => {
@@ -709,40 +754,39 @@ export const api = {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/upload/resume`, {
-        method: "POST",
-        headers,
-        body: formData,
-      });
-      const json = await response.json();
-      if (!response.ok || json.success === false) {
-        throw new Error(json.error?.message || "Resume upload failed");
+    const response = await fetch(`${API_BASE_URL}/api/upload/resume`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+    const contentType = response.headers.get("content-type") || "";
+    let json: any = null;
+    if (contentType.includes("application/json")) {
+      try {
+        json = await response.json();
+      } catch {
+        json = null;
       }
-      return json.data as { url: string; filename: string; size_bytes: number };
-    } catch {
-      return {
-        url: `/api/upload/resumes/demo_${file.name.replace(/\s+/g, "_")}`,
-        filename: file.name,
-        size_bytes: file.size,
-      };
     }
+
+    if (!response.ok || json?.success === false) {
+      const rawMsg = json?.error?.message || json?.detail || `Resume upload failed (${response.status})`;
+      const { message, code } = buildUserFriendlyErrorMessage(response.status, typeof rawMsg === "string" ? rawMsg : undefined);
+      throw new ApiError(message, response.status, code);
+    }
+    return json.data as { url: string; filename: string; size_bytes: number };
   },
 
   deleteCandidateAccount: async () => {
-    try {
-      await apiRequest<{ success: boolean }>("/api/candidates/me", {
-        method: "DELETE",
-      });
-    } catch {
-      // ignore
-    }
+    const res = await apiRequest<{ success: boolean }>("/api/candidates/me", {
+      method: "DELETE",
+    });
     setAuthToken(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem("gfg_onboarding_draft");
       localStorage.removeItem("gfg_candidate_onboarded");
     }
-    return { success: true };
+    return res;
   },
 
   // AI Career Digital Twin (Module 3)
@@ -1959,17 +2003,10 @@ export const careerPassportApi = {
   },
 
   updateVisibility: async (settings: any) => {
-    try {
-      return await apiRequest<any>("/api/passport/visibility", {
-        method: "PUT",
-        body: JSON.stringify(settings),
-      });
-    } catch {
-      return {
-        message: "Career Passport privacy settings successfully updated.",
-        visibility_settings: settings,
-      };
-    }
+    return await apiRequest<any>("/api/passport/visibility", {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    });
   },
 
   getEmployerPreview: async () => {
@@ -1992,33 +2029,16 @@ export const careerPassportApi = {
     permissions?: any;
     expires_days?: number;
   }) => {
-    try {
-      return await apiRequest<any>("/api/passport/grants", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-    } catch {
-      return {
-        message: `Time-limited access grant created for ${data.grantee_email}.`,
-        grant_id: "demo-grant-" + Math.random().toString(36).substr(2, 6),
-        access_token: "demo-tok-" + Math.random().toString(36).substr(2, 12),
-        share_url: `/passport/view/demo-${Math.random().toString(36).substr(2, 6)}`,
-        expires_at: new Date(Date.now() + (data.expires_days || 30) * 86400000).toISOString(),
-      };
-    }
+    return await apiRequest<any>("/api/passport/grants", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 
   revokeAccessGrant: async (grantId: string) => {
-    try {
-      return await apiRequest<any>(`/api/passport/grants/${grantId}`, {
-        method: "DELETE",
-      });
-    } catch {
-      return {
-        message: "Employer access successfully revoked.",
-        grant_id: grantId,
-      };
-    }
+    return await apiRequest<any>(`/api/passport/grants/${grantId}`, {
+      method: "DELETE",
+    });
   },
 
   getAccessLogs: async () => {
@@ -2052,24 +2072,36 @@ export const careerPassportApi = {
     document_url?: string;
     notes?: string;
   }) => {
-    try {
-      return await apiRequest<any>("/api/passport/verification/submit", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-    } catch {
-      return {
-        message: `Evidence submitted for '${data.title}'. Status: Pending Review.`,
-        record_id: "ver-rec-" + Math.random().toString(36).substr(2, 6),
-        verification_level: "pending_review",
-        outcome: "pending",
-      };
-    }
+    return await apiRequest<any>("/api/passport/verification/submit", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 
   downloadPdfUrl: () => {
+    return `${API_BASE_URL}/api/passport/download-pdf`;
+  },
+
+  downloadPdfBlob: async (candidateId?: string): Promise<Blob> => {
     const token = getAuthToken();
-    return `${API_BASE_URL}/api/passport/download-pdf${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const query = candidateId ? `?candidate_id=${encodeURIComponent(candidateId)}` : "";
+    const response = await fetch(`${API_BASE_URL}/api/passport/download-pdf${query}`, {
+      method: "GET",
+      headers,
+    });
+    if (!response.ok) {
+      const errorJson = await response.json().catch(() => null);
+      const errMsg = errorJson?.error?.message ||
+        (typeof errorJson?.detail === "string" ? errorJson.detail : errorJson?.detail?.message) ||
+        `Failed to download PDF (status ${response.status})`;
+      const { message, code } = buildUserFriendlyErrorMessage(response.status, errMsg, errorJson?.error?.code);
+      throw new ApiError(message, response.status, code);
+    }
+    return await response.blob();
   }
 };
 
@@ -2402,32 +2434,10 @@ export const communityEcosystemApi = {
   },
 
   requestSession: async (payload: { candidate_id: string; mentor_id: string; topic: string; goals: string; scheduled_at: string; format: string }) => {
-    try {
-      return await apiRequest<any>("/api/mentors/sessions/request", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      return {
-        status: "success",
-        message: "Mentorship request submitted. Awaiting mentor confirmation. Calendar integrations will dispatch once confirmed.",
-        session: {
-          id: `sess-${Date.now()}`,
-          candidate_id: payload.candidate_id,
-          mentor_id: payload.mentor_id,
-          mentor_name: "Dr. Meera Iyer",
-          mentor_title: "Lead Data Scientist & Returnship Advisor",
-          topic: payload.topic,
-          goals: payload.goals,
-          scheduled_at: payload.scheduled_at,
-          format: payload.format,
-          status: "pending_confirmation",
-          meeting_link: null,
-          candidate_private_notes: "Preparing discussion points on my portfolio project and 3-year sabbatical context.",
-          calendar_authorized: false,
-        }
-      };
-    }
+    return await apiRequest<any>("/api/mentors/sessions/request", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   getSessions: async (params?: { candidate_id?: string; mentor_id?: string }) => {
@@ -2645,25 +2655,17 @@ export const communityEcosystemApi = {
   },
 
   joinCircle: async (circleId: string, candidateId: string) => {
-    try {
-      return await apiRequest<any>(`/api/circles/${circleId}/join`, {
-        method: "POST",
-        body: JSON.stringify({ candidate_id: candidateId }),
-      });
-    } catch {
-      return { status: "success", message: "Joined Comeback Circle.", circle_id: circleId };
-    }
+    return await apiRequest<any>(`/api/circles/${circleId}/join`, {
+      method: "POST",
+      body: JSON.stringify({ candidate_id: candidateId }),
+    });
   },
 
   leaveCircle: async (circleId: string, candidateId: string) => {
-    try {
-      return await apiRequest<any>(`/api/circles/${circleId}/leave`, {
-        method: "POST",
-        body: JSON.stringify({ candidate_id: candidateId }),
-      });
-    } catch {
-      return { status: "success", message: "Left Comeback Circle.", circle_id: circleId };
-    }
+    return await apiRequest<any>(`/api/circles/${circleId}/leave`, {
+      method: "POST",
+      body: JSON.stringify({ candidate_id: candidateId }),
+    });
   },
 
   getCircleDiscussions: async (circleId: string) => {
@@ -2701,25 +2703,10 @@ export const communityEcosystemApi = {
   },
 
   createCircleDiscussion: async (circleId: string, payload: { candidate_id: string; title: string; content: string; category: string }) => {
-    try {
-      return await apiRequest<any>(`/api/circles/${circleId}/discussions`, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      return {
-        status: "success",
-        message: "Discussion topic posted.",
-        post: {
-          id: `post-${Date.now()}`,
-          title: payload.title,
-          content: payload.content,
-          author_name: "Priya Sharma",
-          category: payload.category,
-          created_at: new Date().toISOString(),
-        }
-      };
-    }
+    return await apiRequest<any>(`/api/circles/${circleId}/discussions`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   getInterviewTracks: async () => {
@@ -2860,25 +2847,17 @@ export const communityEcosystemApi = {
   },
 
   submitReport: async (payload: { reporter_id: string; target_type: string; target_id: string; reason: string; description: string }) => {
-    try {
-      return await apiRequest<any>("/api/community/report", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      return { status: "success", message: "Report received and queued for moderator review.", report_id: "rep-demo" };
-    }
+    return await apiRequest<any>("/api/community/report", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   blockUser: async (payload: { blocker_id: string; blocked_id: string }) => {
-    try {
-      return await apiRequest<any>("/api/community/block", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      return { status: "success", message: "User blocked.", blocked_id: payload.blocked_id };
-    }
+    return await apiRequest<any>("/api/community/block", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   getBlockedUsers: async (userId: string) => {
@@ -3199,30 +3178,13 @@ export const employerIntelligenceApi = {
     company_size?: string;
     hiring_charter_accepted: boolean;
   }) => {
-    try {
-      return await apiRequest<any>("/api/employer/register", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      if (!payload.hiring_charter_accepted) {
-        throw new Error("You must accept the GFG Caregiving-Dignity Charter to register.");
-      }
-      return {
-        status: "success",
-        company: {
-          id: "comp-new-" + Date.now(),
-          name: payload.company_name,
-          website: payload.official_website,
-          authorized_representative: payload.authorized_representative,
-          business_contact_email: payload.business_contact_email,
-          verification_status: "pending_review",
-          verified: false,
-          hiring_charter_accepted: true,
-        },
-        verification_notice: "Registration received. Your organization status is 'pending_review' pending manual compliance review by GFG Trust & Safety auditors before public badge issuance. Automatic verified status is strictly prohibited."
-      };
+    if (!payload.hiring_charter_accepted) {
+      throw new ApiError("You must accept the GFG Caregiving-Dignity Charter to register.", 400, "CHARTER_REQUIRED");
     }
+    return await apiRequest<any>("/api/employer/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   getDashboard: async (companyName?: string) => {
@@ -3702,20 +3664,10 @@ export const employerIntelligenceApi = {
     reviewer_name?: string;
     notes?: string;
   }) => {
-    try {
-      return await apiRequest<any>(`/api/employer/applications/${applicationId}/advance`, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      return {
-        status: "success",
-        application_id: applicationId,
-        new_status: payload.new_status,
-        reviewer: payload.reviewer_name || "Talent Lead",
-        message: `Candidate status successfully updated to ${payload.new_status}.`
-      };
-    }
+    return await apiRequest<any>(`/api/employer/applications/${applicationId}/advance`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   getAuditLogs: async (companyName?: string) => {
@@ -4276,84 +4228,27 @@ export const privacyApi = {
     allow_mentor_sharing?: boolean;
     allow_anonymized_research?: boolean;
   }) => {
-    try {
-      return await apiRequest<any>("/api/privacy/consent-settings", {
-        method: "POST",
-        body: JSON.stringify(settings)
-      });
-    } catch {
-      return {
-        status: "success",
-        data: {
-          updated_at: new Date().toISOString(),
-          ...settings
-        }
-      };
-    }
+    return await apiRequest<any>("/api/privacy/consent-settings", {
+      method: "POST",
+      body: JSON.stringify(settings)
+    });
   },
 
   revokeAllConsent: async () => {
-    try {
-      return await apiRequest<any>("/api/privacy/revoke-all-consent", {
-        method: "POST"
-      });
-    } catch {
-      return {
-        status: "success",
-        data: {
-          revoked_at: new Date().toISOString(),
-          career_break_visibility: "private",
-          allow_ai_matching: false,
-          allow_mentor_sharing: false,
-          allow_anonymized_research: false
-        }
-      };
-    }
+    return await apiRequest<any>("/api/privacy/revoke-all-consent", {
+      method: "POST"
+    });
   },
 
   exportData: async () => {
-    try {
-      return await apiRequest<any>("/api/privacy/export-data");
-    } catch {
-      return {
-        status: "success",
-        data: {
-          export_id: "DPDP-EXPORT-DEMO-SIMULATED",
-          exported_at: new Date().toISOString(),
-          account: {
-            full_name: DEMO_PERSONA.full_name,
-            email: "ananya.raman@example.com",
-            role: "candidate"
-          },
-          skills: DEMO_PERSONA.skills,
-          applications: [
-            {
-              job_title: "Senior Full-Stack Returnship Fellow",
-              company_name: "Nova Tech (Fictional)",
-              status: "under_review"
-            }
-          ]
-        }
-      };
-    }
+    return await apiRequest<any>("/api/privacy/export-data");
   },
 
   submitErasureRequest: async (reason: string = "Voluntary account removal") => {
-    try {
-      return await apiRequest<any>("/api/privacy/erasure-request", {
-        method: "POST",
-        body: JSON.stringify({ reason, confirm_hard_delete: true })
-      });
-    } catch {
-      return {
-        status: "success",
-        data: {
-          request_id: "ERASURE-REQ-DEMO",
-          status: "pending_review",
-          estimated_completion_days: 7
-        }
-      };
-    }
+    return await apiRequest<any>("/api/privacy/erasure-request", {
+      method: "POST",
+      body: JSON.stringify({ reason, confirm_hard_delete: true })
+    });
   }
 };
 

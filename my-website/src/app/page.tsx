@@ -1046,6 +1046,7 @@ export default function Home() {
         isOpen={showMentorshipModal}
         onClose={() => setShowMentorshipModal(false)}
         initialTab={mentorshipInitialTab}
+        currentUser={currentUser}
       />
 
       {/* 10. Real Comeback Story Modal (Elena Rostova Case Study) */}

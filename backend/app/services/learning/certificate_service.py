@@ -164,14 +164,15 @@ def check_course_eligibility(
     return all_eligible, checklist
 
 
-def issue_course_certificate(
+async def issue_course_certificate(
     db: Session,
     course_id: str,
     user_id: str
-) -> LmsCertificate:
+) -> Tuple[LmsCertificate, Dict[str, Any]]:
     """
     Issues authentic GFG Certificate of Achievement after verifying all eligibility criteria.
-    Enforces duplicate prevention.
+    Enforces duplicate prevention and handles reliable, bounded certificate email dispatch.
+    Distinguishes certificate creation from email delivery.
     """
     # Check if certificate already exists for this learner & course
     existing_cert = db.query(LmsCertificate).filter(
@@ -179,7 +180,10 @@ def issue_course_certificate(
         LmsCertificate.course_id == course_id
     ).first()
     if existing_cert:
-        return existing_cert
+        return existing_cert, {
+            "status": "duplicate_skipped",
+            "message": "Certificate already issued. Duplicate send skipped."
+        }
 
     user = db.query(Profile).filter(Profile.id == user_id).first()
     if not user:
@@ -302,28 +306,48 @@ def issue_course_certificate(
     db.refresh(certificate)
 
     # Dispatch official Certificate notification email via Resend
-    try:
-        import asyncio
-        from backend.app.services.email_service import email_service
-        download_url = f"{frontend_base}/api/learning/certificates/{certificate.credential_id}/download-pdf"
-        try:
-            loop = asyncio.get_running_loop()
-            loop.create_task(
-                email_service.send_certificate_email(
-                    to_email=user.email,
-                    recipient_name=user.full_name,
-                    course_title=course.title,
-                    credential_id=certificate.credential_id,
-                    verification_url=certificate.verification_url,
-                    pdf_download_url=download_url
-                )
-            )
-        except RuntimeError:
-            pass
-    except Exception:
-        pass
+    from backend.app.services.email_service import email_service
+    download_url = f"{frontend_base}/api/learning/certificates/{certificate.credential_id}/download-pdf"
 
-    return certificate
+    try:
+        email_result = await email_service.send_certificate_email(
+            to_email=user.email,
+            recipient_name=user.full_name,
+            course_title=course.title,
+            credential_id=certificate.credential_id,
+            verification_url=certificate.verification_url,
+            pdf_download_url=download_url
+        )
+    except Exception as e:
+        email_result = {
+            "id": None,
+            "status": "failed",
+            "error": str(e)
+        }
+
+    # Persist email delivery status in audit log
+    action_type = (
+        "email_dispatched" if email_result.get("status") == "delivered"
+        else ("email_disabled" if email_result.get("status") == "disabled"
+        else "email_dispatch_failed")
+    )
+    email_audit = CertificateAuditLog(
+        certificate_id=certificate.id,
+        action=action_type,
+        actor_id=user.id,
+        details={
+            "to": user.email,
+            "status": email_result.get("status"),
+            "provider_id": email_result.get("id"),
+            "error": email_result.get("error"),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        },
+        timestamp=datetime.now(timezone.utc)
+    )
+    db.add(email_audit)
+    db.commit()
+
+    return certificate, email_result
 
 
 def get_public_certificate_verification(

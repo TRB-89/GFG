@@ -10,6 +10,7 @@ from sqlalchemy import or_, and_, desc
 from backend.app.database.database import get_db
 from backend.app.models.user import Profile
 from backend.app.models.candidate import CandidateProfile, CandidateSkill, Skill
+from backend.app.middleware.auth_middleware import get_optional_user
 from backend.app.models.community import (
     MentorProfile,
     MentorshipSession,
@@ -270,17 +271,36 @@ def get_recommended_mentors(
 # ============================================================================
 
 @router.post("/mentors/sessions/request", status_code=status.HTTP_201_CREATED)
-def request_mentorship_session(payload: SessionRequestPayload, db: Session = Depends(get_db)):
+def request_mentorship_session(
+    payload: SessionRequestPayload,
+    current_user: Optional[Profile] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
     """
     Request a mentorship session.
-    Starts as 'pending_confirmation' per Section 3 requirement:
-    'Do not simulate confirmed bookings as actual bookings. Use real calendar integrations only when configured and authorized.'
+    Starts as 'pending_confirmation' per Section 3 requirement.
+    Enforces user authorization: authenticated candidates cannot book on behalf of another user.
     """
+    candidate = None
+    if current_user and current_user.role == "candidate":
+        cand = current_user.candidate_profile
+        if cand:
+            if payload.candidate_id and payload.candidate_id not in [cand.id, current_user.id] and current_user.role != "admin":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={"code": "FORBIDDEN", "message": "Cross-user access denied. You cannot book sessions on behalf of another candidate."}
+                )
+            candidate = cand
+
     mentor = db.query(MentorProfile).filter(MentorProfile.id == payload.mentor_id).first()
     if not mentor:
         raise HTTPException(status_code=404, detail="Selected mentor does not exist")
-        
-    candidate = db.query(CandidateProfile).filter(CandidateProfile.id == payload.candidate_id).first()
+
+    if not candidate:
+        candidate = db.query(CandidateProfile).filter(
+            or_(CandidateProfile.id == payload.candidate_id, CandidateProfile.user_id == payload.candidate_id)
+        ).first()
+
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found")
         
@@ -325,17 +345,33 @@ def request_mentorship_session(payload: SessionRequestPayload, db: Session = Dep
 def list_sessions(
     candidate_id: Optional[str] = None,
     mentor_id: Optional[str] = None,
+    current_user: Optional[Profile] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """
     List scheduled sessions for a candidate or mentor.
+    Enforces user isolation for authenticated candidates.
     """
+    effective_candidate_id = candidate_id
+    if current_user and current_user.role == "candidate":
+        cand = current_user.candidate_profile
+        if cand:
+            if candidate_id and candidate_id not in [cand.id, current_user.id] and current_user.role != "admin":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={"code": "FORBIDDEN", "message": "Cross-user access denied. You can only view your own mentorship sessions."}
+                )
+            if not effective_candidate_id:
+                effective_candidate_id = cand.id
+
     query = db.query(MentorshipSession)
-    if candidate_id:
-        query = query.filter(MentorshipSession.candidate_id == candidate_id)
+    if effective_candidate_id:
+        query = query.filter(
+            or_(MentorshipSession.candidate_id == effective_candidate_id, MentorshipSession.candidate_id == (current_user.id if current_user else None))
+        )
     if mentor_id:
         query = query.filter(MentorshipSession.mentor_id == mentor_id)
-        
+
     sessions = query.order_by(desc(MentorshipSession.created_at)).all()
     
     results = []
@@ -602,15 +638,31 @@ def get_circle_details(circle_id: str, db: Session = Depends(get_db)):
     }
 
 @router.post("/circles/{circle_id}/join")
-def join_comeback_circle(circle_id: str, payload: CircleJoinPayload, db: Session = Depends(get_db)):
+def join_comeback_circle(
+    circle_id: str,
+    payload: CircleJoinPayload,
+    current_user: Optional[Profile] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
     circle = db.query(ComebackCircle).filter(ComebackCircle.id == circle_id).first()
     if not circle:
         raise HTTPException(status_code=404, detail="Comeback Circle not found")
-        
+
+    candidate_id = payload.candidate_id
+    if current_user and current_user.role == "candidate":
+        cand = current_user.candidate_profile
+        if cand:
+            if candidate_id and candidate_id not in [cand.id, current_user.id] and current_user.role != "admin":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={"code": "FORBIDDEN", "message": "Cross-user access denied. You cannot join circles for another candidate."}
+                )
+            candidate_id = cand.id
+
     # Check if already a member
     existing = db.query(CircleMembership).filter(
         CircleMembership.circle_id == circle_id,
-        CircleMembership.candidate_id == payload.candidate_id
+        CircleMembership.candidate_id == candidate_id
     ).first()
     if existing:
         return {
@@ -618,23 +670,23 @@ def join_comeback_circle(circle_id: str, payload: CircleJoinPayload, db: Session
             "message": "You are already an active member of this Comeback Circle.",
             "circle_id": circle_id
         }
-        
+
     if circle.current_member_count >= circle.max_members:
         raise HTTPException(
             status_code=400,
             detail=f"This peer group has reached its maximum cohort capacity ({circle.max_members} members). Small circles foster intimate mutual accountability."
         )
-        
+
     membership = CircleMembership(
         id=str(uuid.uuid4()),
         circle_id=circle_id,
-        candidate_id=payload.candidate_id,
+        candidate_id=candidate_id,
         role="member"
     )
     circle.current_member_count += 1
     db.add(membership)
     db.commit()
-    
+
     return {
         "status": "success",
         "message": f"Welcome to '{circle.name}'! You are now part of this peer learning circle.",
@@ -643,18 +695,34 @@ def join_comeback_circle(circle_id: str, payload: CircleJoinPayload, db: Session
     }
 
 @router.post("/circles/{circle_id}/leave")
-def leave_comeback_circle(circle_id: str, payload: CircleJoinPayload, db: Session = Depends(get_db)):
+def leave_comeback_circle(
+    circle_id: str,
+    payload: CircleJoinPayload,
+    current_user: Optional[Profile] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    candidate_id = payload.candidate_id
+    if current_user and current_user.role == "candidate":
+        cand = current_user.candidate_profile
+        if cand:
+            if candidate_id and candidate_id not in [cand.id, current_user.id] and current_user.role != "admin":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={"code": "FORBIDDEN", "message": "Cross-user access denied. You cannot leave circles for another candidate."}
+                )
+            candidate_id = cand.id
+
     membership = db.query(CircleMembership).filter(
         CircleMembership.circle_id == circle_id,
-        CircleMembership.candidate_id == payload.candidate_id
+        CircleMembership.candidate_id == candidate_id
     ).first()
     if not membership:
         raise HTTPException(status_code=404, detail="You are not a member of this circle.")
-        
+
     circle = db.query(ComebackCircle).filter(ComebackCircle.id == circle_id).first()
     if circle and circle.current_member_count > 0:
         circle.current_member_count -= 1
-        
+
     db.delete(membership)
     db.commit()
     return {
@@ -695,23 +763,38 @@ def get_circle_discussions(circle_id: str, db: Session = Depends(get_db)):
 def create_circle_discussion(
     circle_id: str,
     payload: CirclePostPayload,
+    current_user: Optional[Profile] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     circle = db.query(ComebackCircle).filter(ComebackCircle.id == circle_id).first()
     if not circle:
         raise HTTPException(status_code=404, detail="Circle not found")
-        
-    candidate = db.query(CandidateProfile).filter(CandidateProfile.id == payload.candidate_id).first()
-    author_name = candidate.profile.full_name if (candidate and candidate.profile) else "Circle Member"
-    
+
+    author_id = payload.candidate_id
+    author_name = "Circle Member"
+    if current_user:
+        if current_user.role == "candidate":
+            cand = current_user.candidate_profile
+            if cand:
+                if payload.candidate_id and payload.candidate_id not in [cand.id, current_user.id] and current_user.role != "admin":
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail={"code": "FORBIDDEN", "message": "Cross-user access denied. You cannot post discussions as another candidate."}
+                    )
+                author_id = cand.id
+        author_name = current_user.full_name or "Circle Member"
+    else:
+        candidate = db.query(CandidateProfile).filter(CandidateProfile.id == payload.candidate_id).first()
+        author_name = candidate.profile.full_name if (candidate and candidate.profile) else "Circle Member"
+
     # Safety & Moderation: Mask any phone numbers or emails per Section 6
     safe_content = mask_sensitive_contact_info(payload.content)
     safe_title = mask_sensitive_contact_info(payload.title)
-    
+
     new_post = CircleDiscussionPost(
         id=str(uuid.uuid4()),
         circle_id=circle_id,
-        author_id=payload.candidate_id,
+        author_id=author_id,
         author_name=author_name,
         author_role="Candidate Peer",
         title=safe_title,

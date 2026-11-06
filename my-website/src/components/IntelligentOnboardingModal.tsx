@@ -298,9 +298,27 @@ export function IntelligentOnboardingModal({
       try {
         const draft = await api.getOnboardingDraft();
         if (draft && draft.draft_data) {
+          const draftProjects = Array.isArray((draft.draft_data as any).projects)
+            ? (draft.draft_data as any).projects.map((p: any) => ({
+                id: p.id || `proj_${Math.random().toString(36).substr(2, 9)}`,
+                title: p.title || "",
+                description: p.description || "",
+                skills_demonstrated: Array.isArray(p.skills_demonstrated)
+                  ? p.skills_demonstrated
+                  : (p.skills_demonstrated ? String(p.skills_demonstrated).split(",").map((s: string) => s.trim()) : []),
+                technologies_used: Array.isArray(p.technologies_used)
+                  ? p.technologies_used
+                  : (p.technologies ? String(p.technologies).split(",").map((s: string) => s.trim()) : []),
+                project_link: p.project_link || p.project_url || "",
+                repository_link: p.repository_link || p.github_url || "",
+                year_completed: p.year_completed || new Date().getFullYear(),
+              }))
+            : [];
+
           setState((prev) => ({
             ...prev,
             ...(draft.draft_data as Partial<OnboardingState>),
+            ...(draftProjects.length > 0 ? { projects: draftProjects } : {}),
           }));
           if (draft.current_step && draft.current_step >= 1 && draft.current_step <= 5) {
             setCurrentStep(draft.current_step);
@@ -524,10 +542,13 @@ export function IntelligentOnboardingModal({
         projects: state.projects.map((p) => ({
           title: p.title,
           description: p.description,
-          skills_demonstrated: p.skills_demonstrated,
+          skills_demonstrated: Array.isArray(p.skills_demonstrated) ? p.skills_demonstrated.join(", ") : p.skills_demonstrated,
+          technologies: Array.isArray(p.technologies_used) ? p.technologies_used.join(", ") : (p.technologies_used || ""),
           technologies_used: p.technologies_used,
-          project_link: p.project_link,
-          repository_link: p.repository_link,
+          project_url: p.project_link || (p as any).project_url || "",
+          project_link: p.project_link || (p as any).project_url || "",
+          github_url: p.repository_link || (p as any).github_url || "",
+          repository_link: p.repository_link || (p as any).github_url || "",
           year_completed: p.year_completed,
         })),
         support_preferences: {

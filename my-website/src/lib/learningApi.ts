@@ -1,4 +1,4 @@
-import { getAuthToken } from "./api";
+import { getAuthToken, ApiError, buildUserFriendlyErrorMessage } from "./api";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -27,11 +27,19 @@ async function learningFetch<T>(endpoint: string, options: RequestInit = {}): Pr
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const errorMsg = data?.message || data?.detail?.message || `Request failed with status ${response.status}`;
-    const err = new Error(errorMsg) as Error & { status?: number; data?: any };
-    err.status = response.status;
-    err.data = data;
-    throw err;
+    let rawMsg: string | undefined;
+    let rawCode: string | undefined;
+    if (typeof data?.detail === "string") {
+      rawMsg = data.detail;
+    } else if (data?.detail && typeof data.detail === "object") {
+      rawMsg = data.detail.message;
+      rawCode = data.detail.code;
+    } else if (data?.message) {
+      rawMsg = data.message;
+      rawCode = data.code;
+    }
+    const { message, code } = buildUserFriendlyErrorMessage(response.status, rawMsg, rawCode, data);
+    throw new ApiError(message, response.status, code, data);
   }
 
   return (data?.data !== undefined ? data.data : data) as T;
@@ -385,6 +393,27 @@ export const learningApi = {
 
   getDownloadPdfUrl: (credentialId: string) => {
     return `${API_BASE_URL}/api/learning/certificates/${credentialId}/download-pdf`;
+  },
+
+  downloadCertificatePdfBlob: async (credentialId: string): Promise<Blob> => {
+    const token = getAuthToken();
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${API_BASE_URL}/api/learning/certificates/${credentialId}/download-pdf`, {
+      method: "GET",
+      headers,
+    });
+    if (!response.ok) {
+      const errorJson = await response.json().catch(() => null);
+      const rawMsg = (typeof errorJson?.detail === "string" ? errorJson.detail : errorJson?.detail?.message) ||
+        errorJson?.message ||
+        `Failed to download Certificate PDF (status ${response.status})`;
+      const { message, code } = buildUserFriendlyErrorMessage(response.status, rawMsg, errorJson?.detail?.code);
+      throw new ApiError(message, response.status, code);
+    }
+    return await response.blob();
   },
 
   // AI Assistant

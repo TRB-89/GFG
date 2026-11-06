@@ -819,16 +819,16 @@ def get_certificate_eligibility(
 
 
 @router.post("/courses/{course_id}/claim-certificate")
-def claim_certificate(
+async def claim_certificate(
     course_id: str,
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Issues authentic GFG Certificate of Achievement after verifying all eligibility criteria.
-    Enforces duplicate prevention.
+    Enforces duplicate prevention and reliably dispatches certificate notification email.
     """
-    cert = issue_course_certificate(db, course_id, current_user.id)
+    cert, email_result = await issue_course_certificate(db, course_id, current_user.id)
 
     return success_response({
         "id": cert.id,
@@ -844,7 +844,8 @@ def claim_certificate(
         "verification_url": cert.verification_url,
         "qr_code_svg": cert.qr_code_svg,
         "pdf_download_url": f"/api/learning/certificates/{cert.credential_id}/download-pdf",
-        "is_public_directory_consented": cert.is_public_directory_consented
+        "is_public_directory_consented": cert.is_public_directory_consented,
+        "email_delivery": email_result
     })
 
 
@@ -1094,7 +1095,7 @@ def admin_list_submissions(
 
 
 @router.post("/admin/submissions/{submission_id}/review")
-def admin_review_submission(
+async def admin_review_submission(
     submission_id: str,
     req: AssignmentReviewRequest,
     current_user: Profile = Depends(require_role(["admin"])),
@@ -1130,23 +1131,16 @@ def admin_review_submission(
         assign = sub.assignment
         course = assign.course if assign else None
         if learner and course:
-            import asyncio
             from backend.app.services.email_service import email_service
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(
-                    email_service.send_assignment_feedback_email(
-                        to_email=learner.email,
-                        recipient_name=learner.full_name,
-                        course_title=course.title,
-                        status=sub.status,
-                        feedback=sub.evaluator_feedback or "Your project has been reviewed."
-                    )
-                )
-            except RuntimeError:
-                pass
-    except Exception:
-        pass
+            await email_service.send_assignment_feedback_email(
+                to_email=learner.email,
+                recipient_name=learner.full_name,
+                course_title=course.title,
+                status=sub.status,
+                feedback=sub.evaluator_feedback or "Your project has been reviewed."
+            )
+    except Exception as e:
+        logger.warning(f"Assignment feedback notification skipped or failed: {e}")
 
     return success_response({
         "submission_id": sub.id,

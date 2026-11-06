@@ -11,7 +11,7 @@ Endpoints for:
 """
 
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
@@ -20,6 +20,9 @@ from backend.app.database.database import get_db
 from backend.app.models.user import Profile
 from backend.app.models.candidate import CandidateProfile
 from backend.app.models.ai import CareerPassport, PassportAccessGrant, PassportAccessLog, VerificationRecord
+from backend.app.models.application import Application
+from backend.app.models.job import Job
+from backend.app.models.company import Company
 from backend.app.middleware.auth_middleware import get_current_user
 from backend.app.services.ai.career_passport_v2 import (
     build_verified_career_passport_data,
@@ -238,24 +241,69 @@ async def get_access_logs(
 
 @router.get("/download-pdf")
 async def download_passport_pdf(
+    candidate_id: Optional[str] = Query(None, description="Optional target candidate ID for authorized employers or admins"),
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Generates and returns a minimal editorial print-friendly Career Passport PDF.
-    Respects candidate's privacy and career-break visibility choices.
+    Generates and returns an editorial print-friendly Career Passport PDF.
+    Enforces authentication and record-level authorization:
+    - Candidates can only download their own passport.
+    - Admins can audit/download any candidate passport.
+    - Employers can only download passports for candidates who have consented or applied.
+    - Unauthenticated requests receive 401; unauthorized access receives 403.
     """
-    cand = db.query(CandidateProfile).filter(CandidateProfile.user_id == current_user.id).first()
-    if not cand:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Candidate profile record not found."
-        )
+    if not candidate_id:
+        cand = db.query(CandidateProfile).filter(CandidateProfile.user_id == current_user.id).first()
+        if not cand:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "PROFILE_NOT_FOUND", "message": "Candidate profile record not found."}
+            )
+        is_employer_view = False
+    else:
+        cand = db.query(CandidateProfile).filter(CandidateProfile.id == candidate_id).first()
+        if not cand:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "PROFILE_NOT_FOUND", "message": "Candidate profile record not found."}
+            )
 
-    passport_data = build_verified_career_passport_data(cand=cand, db=db, is_employer_view=False)
+        if cand.user_id == current_user.id:
+            is_employer_view = False
+        elif current_user.role == "admin":
+            is_employer_view = False
+        elif current_user.role == "employer":
+            # Check consent or active application
+            has_application = db.query(Application).join(Job).join(Company).filter(
+                Application.candidate_id == cand.id,
+                Company.owner_user_id == current_user.id
+            ).first()
+            is_consented = cand.career_break_visibility in ["employers", "public"]
+            if not (has_application or is_consented):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={"code": "FORBIDDEN", "message": "Access denied. Candidate has not consented to share career passport with your organization."}
+                )
+            is_employer_view = True
+            record_passport_access(
+                candidate_id=cand.id,
+                viewer_identity=current_user.full_name or current_user.email,
+                viewer_role="employer",
+                sections_viewed=["pdf_export", "employer_view"],
+                db=db
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"code": "FORBIDDEN", "message": "You do not have permission to access another user's career passport."}
+            )
+
+    passport_data = build_verified_career_passport_data(cand=cand, db=db, is_employer_view=is_employer_view)
     pdf_bytes = generate_passport_pdf(passport_data)
 
-    filename = f"Career_Passport_{cand.user.full_name.replace(' ', '_') if cand.user else 'Candidate'}.pdf"
+    cand_name = cand.user.full_name.replace(' ', '_') if (cand.user and cand.user.full_name) else 'Candidate'
+    filename = f"Career_Passport_{cand_name}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

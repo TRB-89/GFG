@@ -124,8 +124,13 @@ class ProjectCreate(BaseModel):
     title: str
     description: Optional[str] = None
     technologies: Optional[str] = None
+    technologies_used: Optional[List[str]] = None
     project_url: Optional[str] = None
+    project_link: Optional[str] = None
     github_url: Optional[str] = None
+    repository_link: Optional[str] = None
+    year_completed: Optional[int] = None
+    skills_demonstrated: Optional[str] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 

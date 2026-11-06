@@ -50,6 +50,7 @@ export function CareerPassportModal({
   const [accessLogs, setAccessLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Privacy Settings Local State
@@ -211,13 +212,36 @@ export function CareerPassportModal({
     }
   };
 
-  const handleDownloadPdf = () => {
-    const url = careerPassportApi.downloadPdfUrl();
-    window.open(url, "_blank");
-    setFeedback({
-      type: "success",
-      text: "Generating official Verified Career Passport 2.0 PDF with your active privacy filters...",
-    });
+  const handleDownloadPdf = async () => {
+    try {
+      setIsDownloadingPdf(true);
+      setFeedback({
+        type: "success",
+        text: "Generating official Verified Career Passport 2.0 PDF with your active privacy filters...",
+      });
+      const blob = await careerPassportApi.downloadPdfBlob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      const candidateName = (passportData?.candidate_name || activeView?.candidate_name || "Candidate").replace(/\s+/g, "_");
+      link.download = `Career_Passport_${candidateName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      setFeedback({
+        type: "success",
+        text: "Official Verified Career Passport 2.0 PDF downloaded successfully.",
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to download PDF. Please log in.";
+      setFeedback({
+        type: "error",
+        text: msg,
+      });
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -295,11 +319,12 @@ export function CareerPassportModal({
             {/* Quick Action: Official PDF Export */}
             <button
               onClick={handleDownloadPdf}
+              disabled={isDownloadingPdf}
               title="Generate a clean, print-ready, candidate-filtered PDF"
-              className="px-4 py-2 rounded-lg bg-[#D8C2A6] text-[#111111] hover:bg-[#F1E7DB] text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center gap-2 shadow-sm"
+              className="px-4 py-2 rounded-lg bg-[#D8C2A6] text-[#111111] hover:bg-[#F1E7DB] disabled:opacity-50 disabled:cursor-not-allowed text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center gap-2 shadow-sm"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download Official PDF</span>
+              <Download className={`w-3.5 h-3.5 ${isDownloadingPdf ? "animate-bounce" : ""}`} />
+              <span>{isDownloadingPdf ? "Downloading..." : "Download Official PDF"}</span>
             </button>
 
             <button
