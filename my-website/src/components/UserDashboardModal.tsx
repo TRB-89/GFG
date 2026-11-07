@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   LogOut,
@@ -31,10 +31,15 @@ import {
   CheckCircle2,
   HelpCircle,
   ExternalLink,
+  Search,
+  Command,
+  Bell,
+  Check,
 } from "lucide-react";
 import { DEMO_PERSONA, DEMO_METRICS } from "@/lib/demoPersona";
 import { DataClassificationBadge } from "./DataClassificationBadge";
 import { api, privacyApi, personalizationApi } from "@/lib/api";
+import { NoirConsentBadge } from "./noir/NoirBloomKit";
 
 export interface UserDashboardModalProps {
   isOpen: boolean;
@@ -106,6 +111,8 @@ export function UserDashboardModal({
   const [personalizedDash, setPersonalizedDash] = useState<any>(null);
   const [currentGoal, setCurrentGoal] = useState<string>("return_to_work");
   const [isSwitchingGoal, setIsSwitchingGoal] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "roadmap" | "learning" | "confidence" | "privacy">(
     "overview"
   );
@@ -133,6 +140,21 @@ export function UserDashboardModal({
       });
     }
   }, [isOpen]);
+
+  // Keyboard shortcut: Ctrl+K or Cmd+K to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Goal Switcher handler
   const handleGoalSwitch = async (newGoal: string) => {
@@ -285,30 +307,52 @@ export function UserDashboardModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="dashboard-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#0E1310]/85 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#0B0F0D]/90 backdrop-blur-xl overflow-y-auto"
     >
-      <div className="relative w-full max-w-5xl bg-[#1B231E] text-[#F5F0E5] rounded-2xl border border-[#344236] overflow-hidden my-auto max-h-[92vh] flex flex-col font-sans shadow-2xl">
-        {/* Top Header */}
-        <div className="px-6 sm:px-8 py-4 border-b border-[#344236] flex items-center justify-between bg-[#111714] sticky top-0 z-10">
+      <div className="relative w-full max-w-6xl bg-[#0B0F0D] text-[#F5F0E5] rounded-3xl border border-[#344236] overflow-hidden my-auto max-h-[94vh] flex flex-col font-sans shadow-2xl">
+        {/* ========================================================= */}
+        {/* TOP BAR: BRAND, SEARCH & QUICK ACTIONS                    */}
+        {/* ========================================================= */}
+        <div className="px-6 sm:px-8 py-3.5 border-b border-[#344236] flex flex-wrap items-center justify-between gap-4 bg-[#111714] sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#B6C899] shadow-[0_0_8px_rgba(182,200,153,0.6)]" />
-            <span className="text-xs font-mono tracking-wider uppercase text-[#B6C899] font-semibold">
-              CAREER EMPOWERMENT // DASHBOARD
+            <span className="w-2.5 h-2.5 rounded-full bg-[#B6C899] shadow-[0_0_10px_#B6C899]" />
+            <span className="text-xs font-mono tracking-wider uppercase text-[#B6C899] font-medium">
+              GFG // NOIR BLOOM DASHBOARD
             </span>
-            <DataClassificationBadge type="simulated_demonstration" size="sm" />
+            <NoirConsentBadge status="consented" />
+          </div>
+
+          {/* Quick Search & Command Filter */}
+          <div className="flex items-center gap-3 flex-1 max-w-md mx-auto hidden md:flex">
+            <div className="relative w-full">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#AAB9A9]" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search modules, skills, or mentors..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#1B231E] border border-[#344236] rounded-full py-1.5 pl-9 pr-14 text-xs text-[#F5F0E5] placeholder-[#AAB9A9]/60 focus:outline-none focus:border-[#B6C899]"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-[#AAB9A9] bg-[#111714] px-1.5 py-0.5 rounded border border-[#344236]">
+                Ctrl K
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
             <button
+              type="button"
               onClick={onLogout}
-              className="flex items-center gap-1.5 text-xs font-mono uppercase text-[#AAB9A9] hover:text-[#F5F0E5] transition-colors"
+              className="flex items-center gap-1.5 text-xs font-mono uppercase text-[#AAB9A9] hover:text-[#B6C899] transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              <span className="hidden sm:inline">Sign Out</span>
             </button>
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-[#AAB9A9] hover:text-[#F5F0E5] hover:bg-[#202A23] transition-colors"
+              className="p-1.5 rounded-lg text-[#AAB9A9] hover:text-[#F5F0E5] hover:bg-[#1B231E] transition-colors"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -316,18 +360,20 @@ export function UserDashboardModal({
           </div>
         </div>
 
-        {/* Goal Switcher Strip */}
-        <div className="px-6 sm:px-8 py-2.5 bg-[#171F1A] border-b border-[#344236] flex flex-wrap items-center justify-between gap-3 text-xs">
+        {/* ========================================================= */}
+        {/* GOAL SWITCHER STRIP                                       */}
+        {/* ========================================================= */}
+        <div className="px-6 sm:px-8 py-2.5 bg-[#111714] border-b border-[#344236] flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-[#AAB9A9] font-mono text-[11px]">Primary Goal:</span>
+            <span className="text-[#AAB9A9] font-mono text-[11px]">Active Pathway:</span>
             <select
               value={currentGoal}
               onChange={(e) => handleGoalSwitch(e.target.value)}
               disabled={isSwitchingGoal}
-              className="px-2.5 py-1 bg-[#202A23] border border-[#344236] rounded-lg text-xs text-[#B6C899] font-semibold focus:outline-none focus:border-[#B6C899] cursor-pointer"
+              className="px-3 py-1 bg-[#1B231E] border border-[#344236] rounded-lg text-xs text-[#B6C899] font-medium focus:outline-none focus:border-[#B6C899] cursor-pointer"
             >
               {GOAL_OPTIONS.map((g) => (
-                <option key={g.id} value={g.id} className="bg-[#1B231E] text-[#F5F0E5]">
+                <option key={g.id} value={g.id} className="bg-[#111714] text-[#F5F0E5]">
                   {g.title}
                 </option>
               ))}
@@ -342,232 +388,424 @@ export function UserDashboardModal({
                   onClose();
                   onOpenOnboarding();
                 }}
-                className="px-2.5 py-1 text-xs text-[#AAB9A9] hover:text-[#F5F0E5] hover:bg-[#202A23] rounded-lg border border-[#344236] transition-colors"
+                className="px-3 py-1 text-xs text-[#AAB9A9] hover:text-[#F5F0E5] hover:bg-[#1B231E] rounded-lg border border-[#344236] transition-colors font-mono"
               >
-                Review & Edit All Preferences
+                Review Preferences
               </button>
             )}
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="px-6 sm:px-8 border-b border-[#344236] flex items-center gap-6 bg-[#171F1A] text-xs font-medium overflow-x-auto">
+        {/* ========================================================= */}
+        {/* NAVIGATION TABS (Active Sage Underline)                   */}
+        {/* ========================================================= */}
+        <div className="px-6 sm:px-8 border-b border-[#344236] flex items-center gap-6 bg-[#0B0F0D] text-xs font-medium overflow-x-auto">
           <button
+            type="button"
             onClick={() => setActiveTab("overview")}
             className={`py-3 border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === "overview"
-                ? "border-[#B6C899] text-[#B6C899] font-bold"
+                ? "border-[#B6C899] text-[#B6C899] font-semibold"
                 : "border-transparent text-[#AAB9A9] hover:text-[#F5F0E5]"
             }`}
           >
-            <Compass className="w-3.5 h-3.5" /> Personalized Overview
+            <Compass className="w-3.5 h-3.5" /> Bento Overview
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("roadmap")}
             className={`py-3 border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === "roadmap"
-                ? "border-[#B6C899] text-[#B6C899] font-bold"
+                ? "border-[#B6C899] text-[#B6C899] font-semibold"
                 : "border-transparent text-[#AAB9A9] hover:text-[#F5F0E5]"
             }`}
           >
             <Calendar className="w-3.5 h-3.5" /> 8-Week Roadmap
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("confidence")}
             className={`py-3 border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === "confidence"
-                ? "border-[#B6C899] text-[#B6C899] font-bold"
+                ? "border-[#B6C899] text-[#B6C899] font-semibold"
                 : "border-transparent text-[#AAB9A9] hover:text-[#F5F0E5]"
             }`}
           >
-            <Heart className="w-3.5 h-3.5" /> Confidence & Milestones
+            <Heart className="w-3.5 h-3.5" /> Confidence &amp; Milestones
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("learning")}
             className={`py-3 border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === "learning"
-                ? "border-[#B6C899] text-[#B6C899] font-bold"
+                ? "border-[#B6C899] text-[#B6C899] font-semibold"
                 : "border-transparent text-[#AAB9A9] hover:text-[#F5F0E5]"
             }`}
           >
-            <BookOpen className="w-3.5 h-3.5" /> Skills & Learning
+            <BookOpen className="w-3.5 h-3.5" /> Skills &amp; Learning
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("privacy")}
             className={`py-3 border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === "privacy"
-                ? "border-[#B6C899] text-[#B6C899] font-bold"
+                ? "border-[#B6C899] text-[#B6C899] font-semibold"
                 : "border-transparent text-[#AAB9A9] hover:text-[#F5F0E5]"
             }`}
           >
-            <Lock className="w-3.5 h-3.5" /> Privacy & DPDP
+            <Lock className="w-3.5 h-3.5" /> Privacy &amp; DPDP Consent
           </button>
         </div>
 
-        {/* Dashboard Body */}
-        <div className="overflow-y-auto px-6 sm:px-8 py-6 space-y-6 flex-1">
-          {/* TAB 1: OVERVIEW */}
+        {/* ========================================================= */}
+        {/* DASHBOARD BODY (12-COLUMN BENTO GRID)                     */}
+        {/* ========================================================= */}
+        <div className="overflow-y-auto px-6 sm:px-8 py-6 space-y-6 flex-1 bg-[#0B0F0D]">
+          {/* TAB 1: 12-COLUMN BENTO OVERVIEW */}
           {activeTab === "overview" && (
-            <>
-              {/* Hero Greeting & Track Banner */}
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-[#171F1A] via-[#1B231E] to-[#202A23] border border-[#344236] flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono uppercase tracking-wider text-[#B6C899] font-semibold">
-                      {personalizedDash?.journey_title || "Career Comeback Track"}
-                    </span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#B6C899]" />
-                    <span className="text-xs text-[#AAB9A9]">
-                      Target: {targetRole}
-                    </span>
+            <div className="grid grid-cols-12 gap-6">
+              {/* LEFT COLUMN: 8 COLS */}
+              <div className="col-span-12 lg:col-span-8 space-y-6">
+                {/* 1. HERO GREETING BENTO CELL */}
+                <div className="p-7 rounded-3xl bg-[#111714] border border-[#344236] flex flex-col justify-between space-y-5 shadow-xl relative overflow-hidden">
+                  <div className="space-y-2 relative z-10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-mono uppercase tracking-wider text-[#B6C899] font-semibold">
+                        {personalizedDash?.journey_title || "Career Comeback Pathway"}
+                      </span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#B6C899]" />
+                      <span className="text-xs text-[#AAB9A9] font-mono">
+                        Target: {targetRole}
+                      </span>
+                    </div>
+
+                    <h1
+                      id="dashboard-modal-title"
+                      className="text-2xl sm:text-3xl font-serif font-normal tracking-tight text-[#F5F0E5]"
+                    >
+                      Welcome back, {displayName.split(" ")[0]}.
+                    </h1>
+
+                    <p className="text-xs sm:text-sm text-[#AAB9A9] max-w-xl leading-relaxed font-light">
+                      {personalizedDash?.journey_summary ||
+                        `Your foundation is preserved with ${candidateProfile?.years_experience || 3} years of verified experience. Every milestone ahead is calibrated to your active weekly schedule.`}
+                    </p>
                   </div>
-                  <h1
-                    id="dashboard-modal-title"
-                    className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F5F0E5]"
-                  >
-                    Welcome back, {displayName.split(" ")[0]}.
-                  </h1>
-                  <p className="text-xs sm:text-sm text-[#AAB9A9] max-w-xl leading-relaxed">
-                    {personalizedDash?.journey_summary ||
-                      `Your foundation is preserved with ${candidateProfile?.years_experience || 3} years of verified experience. Every milestone ahead is tailored to your schedule.`}
-                  </p>
-                </div>
 
-                <div className="flex flex-wrap items-center gap-2.5">
-                  {onViewPassport && (
-                    <button
-                      onClick={onViewPassport}
-                      className="px-4 py-2 bg-[#B6C899] hover:bg-[#F5F0E5] text-[#111714] font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5"
-                    >
-                      <Award className="w-3.5 h-3.5" />
-                      <span>Career Passport</span>
-                    </button>
-                  )}
-                  {onOpenConfidence && (
-                    <button
-                      onClick={() => {
-                        onClose();
-                        onOpenConfidence();
-                      }}
-                      className="px-3.5 py-2 bg-[#202A23] hover:bg-[#344236] border border-[#344236] text-xs font-semibold text-[#F5F0E5] rounded-xl transition-colors flex items-center gap-1.5"
-                    >
-                      <Heart className="w-3.5 h-3.5 text-[#B6C899]" />
-                      <span>Confidence Journal</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* PRIMARY ACTION CARD (Highest-Impact Next Step) */}
-              <div className="p-6 rounded-2xl bg-[#202A23] border border-[#B6C899]/50 shadow-[0_0_20px_rgba(182,200,153,0.1)] space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono uppercase bg-[#111714] text-[#B6C899] border border-[#B6C899]/30 px-2.5 py-0.5 rounded-full font-bold">
-                      {primaryAction.badge}
-                    </span>
-                    <span className="text-xs text-[#AAB9A9]">
-                      Est. time: {primaryAction.estimated_time}
-                    </span>
-                  </div>
-                  <span className="text-xs text-[#697D69] font-mono">HIGHEST IMPACT ACTION</span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <h2 className="text-lg sm:text-xl font-bold text-[#F5F0E5]">
-                    {primaryAction.title}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-[#AAB9A9] leading-relaxed max-w-3xl">
-                    {primaryAction.description}
-                  </p>
-                </div>
-
-                <div className="pt-2 flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => handleActionClick(primaryAction.action_type)}
-                    className="px-6 py-2.5 bg-[#B6C899] hover:bg-[#F5F0E5] text-[#111714] text-xs font-bold rounded-xl transition-all shadow-md flex items-center gap-2 hover:scale-[1.02]"
-                  >
-                    <span>{primaryAction.cta_label}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-
-                  <span className="text-[11px] text-[#AAB9A9] hidden sm:inline">
-                    Progress is auto-saved as you complete tasks.
-                  </span>
-                </div>
-              </div>
-
-              {/* SECONDARY RECOMMENDED STEPS */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-mono uppercase tracking-wider text-[#AAB9A9]">
-                    Secondary Recommended Steps
-                  </h3>
-                  <span className="text-xs text-[#697D69]">Sequenced for high momentum</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {secondarySteps.map((step: any) => (
-                    <div
-                      key={step.id}
-                      className="p-4 rounded-xl bg-[#171F1A] border border-[#344236] hover:border-[#697D69] transition-all flex flex-col justify-between gap-3"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-[#202A23] text-[#B6C899] border border-[#344236]">
-                            {step.badge}
-                          </span>
-                          <span className="text-[10px] text-[#AAB9A9] font-mono">
-                            ~{step.estimated_time}
-                          </span>
-                        </div>
-                        <h4 className="text-sm font-semibold text-[#F5F0E5]">{step.title}</h4>
-                        <p className="text-xs text-[#AAB9A9] leading-relaxed">{step.description}</p>
-                      </div>
-
+                  <div className="flex flex-wrap items-center gap-3 pt-2 relative z-10">
+                    {onViewPassport && (
                       <button
                         type="button"
-                        onClick={() => handleActionClick(step.action_type)}
-                        className="w-full mt-2 py-2 px-3 bg-[#202A23] hover:bg-[#344236] text-[#B6C899] text-xs font-semibold rounded-lg border border-[#344236] transition-colors flex items-center justify-center gap-1.5"
+                        onClick={onViewPassport}
+                        className="px-5 py-2.5 bg-[#B6C899] hover:bg-[#c8d8b0] text-[#0B0F0D] font-semibold text-xs rounded-full transition-all shadow-[0_0_15px_rgba(182,200,153,0.25)] flex items-center gap-1.5"
                       >
-                        <span>{step.cta_label}</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <Award className="w-3.5 h-3.5" />
+                        <span>Open Career Passport</span>
                       </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* EXPLAINABILITY NOTES */}
-              {personalizedDash?.explainability_notes && (
-                <div className="p-4 rounded-xl bg-[#171F1A] border border-[#344236] space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#B6C899]">
-                    <Sparkles className="w-3.5 h-3.5 text-[#B6C899]" />
-                    <span>Why are these actions recommended? (Explainability)</span>
+                    )}
+                    {onOpenConfidence && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onOpenConfidence();
+                        }}
+                        className="px-4 py-2.5 bg-[#1B231E] hover:bg-[#202A23] border border-[#344236] text-xs font-medium text-[#F5F0E5] hover:text-[#B6C899] rounded-full transition-colors flex items-center gap-1.5"
+                      >
+                        <Heart className="w-3.5 h-3.5 text-[#B6C899]" />
+                        <span>Confidence Journal</span>
+                      </button>
+                    )}
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    {personalizedDash.explainability_notes.map((note: any, i: number) => (
-                      <div key={i} className="text-xs space-y-0.5 text-[#AAB9A9]">
-                        <strong className="text-[#F5F0E5] block">{note.headline}</strong>
-                        <p className="text-[11px] leading-relaxed">{note.reason}</p>
+                </div>
+
+                {/* 2. PRIMARY NEXT BEST ACTION BENTO CELL */}
+                <div className="p-7 rounded-3xl bg-[#1B231E] border border-[#B6C899]/60 shadow-[0_0_30px_rgba(182,200,153,0.12)] space-y-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono uppercase bg-[#111714] text-[#B6C899] border border-[#B6C899]/30 px-3 py-1 rounded-full font-bold">
+                        {primaryAction.badge}
+                      </span>
+                      <span className="text-xs text-[#AAB9A9] font-mono">
+                        Est. time: {primaryAction.estimated_time}
+                      </span>
+                    </div>
+                    <span className="text-xs text-[#B6C899] font-mono font-semibold">
+                      RECOMMENDED FOCUS // 01
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <h2 className="text-xl sm:text-2xl font-serif text-[#F5F0E5]">
+                      {primaryAction.title}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#AAB9A9] leading-relaxed max-w-2xl font-light">
+                      {primaryAction.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 flex flex-wrap items-center justify-between gap-4">
+                    <button
+                      type="button"
+                      onClick={() => handleActionClick(primaryAction.action_type)}
+                      className="px-6 py-3 bg-[#B6C899] hover:bg-[#c8d8b0] text-[#0B0F0D] text-xs font-semibold uppercase tracking-wider rounded-full transition-all shadow-[0_0_20px_rgba(182,200,153,0.3)] flex items-center gap-2 hover:scale-[1.02]"
+                    >
+                      <span>{primaryAction.cta_label}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+
+                    <span className="text-[11px] text-[#AAB9A9] font-mono">
+                      Auto-saved • Fully encrypted
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. SECONDARY ACTION CARDS (Sub-Bento Grid) */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-mono uppercase tracking-wider text-[#AAB9A9]">
+                      Sequenced Growth Milestones
+                    </h3>
+                    <span className="text-xs text-[#536B58] font-mono">PROGRESSIVE ADAPTATION</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {secondarySteps.map((step: any) => (
+                      <div
+                        key={step.id}
+                        className="p-5 rounded-2xl bg-[#111714] border border-[#344236] hover:border-[#B6C899]/50 transition-all flex flex-col justify-between gap-4 shadow-lg"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-[#1B231E] text-[#B6C899] border border-[#344236]">
+                              {step.badge}
+                            </span>
+                            <span className="text-[10px] text-[#AAB9A9] font-mono">
+                              ~{step.estimated_time}
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-serif font-normal text-[#F5F0E5] text-base">{step.title}</h4>
+                          <p className="text-xs text-[#AAB9A9] leading-relaxed font-light">{step.description}</p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleActionClick(step.action_type)}
+                          className="w-full mt-1 py-2 px-3 bg-[#1B231E] hover:bg-[#202A23] text-[#B6C899] text-xs font-semibold rounded-xl border border-[#344236] transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <span>{step.cta_label}</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
-            </>
+
+                {/* 4. 8-WEEK ROADMAP TIMELINE PREVIEW */}
+                <div className="p-6 rounded-3xl bg-[#111714] border border-[#344236] space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-serif text-[#F5F0E5]">
+                        8-Week Comeback Roadmap
+                      </h3>
+                      <p className="text-xs text-[#AAB9A9] font-light">
+                        Milestone progress tied to your weekly time commitment.
+                      </p>
+                    </div>
+                    {onOpenRoadmap && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onOpenRoadmap();
+                        }}
+                        className="px-3.5 py-1.5 text-xs font-mono text-[#B6C899] hover:underline flex items-center gap-1"
+                      >
+                        <span>View Full Roadmap</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 pt-1">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((wk) => {
+                      const isActive = wk === 1;
+                      return (
+                        <div
+                          key={wk}
+                          className={`p-2.5 rounded-xl border text-center font-mono text-xs flex flex-col items-center justify-center gap-1 ${
+                            isActive
+                              ? "bg-[#1B231E] border-[#B6C899] text-[#B6C899] font-bold shadow-md"
+                              : "bg-[#0B0F0D] border-[#344236] text-[#AAB9A9]"
+                          }`}
+                        >
+                          <span className="text-[10px]">W{wk}</span>
+                          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-[#B6C899]" : "bg-[#344236]"}`} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: 4 COLS (CREDENTIALS, PASSPORT, PRIVACY & SHORTCUTS) */}
+              <div className="col-span-12 lg:col-span-4 space-y-6">
+                {/* 1. CAREER PASSPORT MINI CARD */}
+                <div className="p-6 rounded-3xl bg-[#111714] border border-[#344236] space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#C6AC7D] font-bold">
+                      VERIFIABLE CREDENTIAL
+                    </span>
+                    <Award className="w-4 h-4 text-[#C6AC7D]" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-serif text-[#F5F0E5]">
+                      Career Passport 2.0
+                    </h3>
+                    <p className="text-xs text-[#AAB9A9] font-light">
+                      Cryptographically certified evidence of pre-break mastery and recent project capstones.
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-[#1B231E] rounded-xl border border-[#344236] text-xs font-mono space-y-1.5">
+                    <div className="flex justify-between text-[#AAB9A9]">
+                      <span>Preserved Experience:</span>
+                      <span className="text-[#F5F0E5] font-semibold">{candidateProfile?.years_experience || 3} Years</span>
+                    </div>
+                    <div className="flex justify-between text-[#AAB9A9]">
+                      <span>Consent Status:</span>
+                      <span className="text-[#B6C899]">
+                        {profileVisibility === "employers" ? "Consented (Partners)" : "Private Only"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {onViewPassport && (
+                    <button
+                      type="button"
+                      onClick={onViewPassport}
+                      className="w-full py-2.5 px-4 rounded-xl bg-[#1B231E] hover:bg-[#202A23] border border-[#C6AC7D]/40 hover:border-[#C6AC7D] text-[#C6AC7D] text-xs font-mono font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <span>Inspect Passport Dossier</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* 2. VERIFIED SKILLS BADGE CLOUD */}
+                <div className="p-6 rounded-3xl bg-[#111714] border border-[#344236] space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#B6C899] font-bold">
+                      CAPABILITY PROFILE
+                    </span>
+                    <CheckCircle className="w-4 h-4 text-[#B6C899]" />
+                  </div>
+
+                  <h3 className="text-sm font-semibold text-[#F5F0E5]">
+                    Active &amp; Refreshed Skills
+                  </h3>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {(
+                      candidateProfile?.skills?.map((s: any) => s.name || s) || [
+                        "Python",
+                        "SQL",
+                        "PostgreSQL",
+                        "Data Modeling",
+                        "Excel Analytics",
+                        "System Architecture",
+                      ]
+                    ).map((sk: string) => (
+                      <span
+                        key={sk}
+                        className="px-2.5 py-1 bg-[#1B231E] rounded-lg text-xs text-[#F5F0E5] border border-[#344236] font-mono text-[11px]"
+                      >
+                        {sk}
+                      </span>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("learning")}
+                    className="w-full text-center text-xs text-[#B6C899] hover:underline pt-1 font-mono block"
+                  >
+                    + Add New Competency
+                  </button>
+                </div>
+
+                {/* 3. DIRECT ACTION SHORTCUTS */}
+                <div className="p-6 rounded-3xl bg-[#111714] border border-[#344236] space-y-3 shadow-xl">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#AAB9A9] font-semibold block">
+                    QUICK DISCOVERY
+                  </span>
+
+                  {onOpenOpportunities && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenOpportunities();
+                      }}
+                      className="w-full text-left p-3 rounded-xl bg-[#1B231E] hover:bg-[#202A23] border border-[#344236] text-xs text-[#F5F0E5] hover:text-[#B6C899] transition-colors flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-[#B6C899]" />
+                        <span>Browse Returnships</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#AAB9A9]" />
+                    </button>
+                  )}
+
+                  {onOpenMentorship && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenMentorship();
+                      }}
+                      className="w-full text-left p-3 rounded-xl bg-[#1B231E] hover:bg-[#202A23] border border-[#344236] text-xs text-[#F5F0E5] hover:text-[#B6C899] transition-colors flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-[#B6C899]" />
+                        <span>1:1 Mentor Circles</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#AAB9A9]" />
+                    </button>
+                  )}
+
+                  {onOpenLearning && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenLearning();
+                      }}
+                      className="w-full text-left p-3 rounded-xl bg-[#1B231E] hover:bg-[#202A23] border border-[#344236] text-xs text-[#F5F0E5] hover:text-[#B6C899] transition-colors flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-[#B6C899]" />
+                        <span>Learning Hub Academy</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#AAB9A9]" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           )}
 
-          {/* TAB 2: ROADMAP PREVIEW & TRIGGER */}
+          {/* TAB 2: 8-WEEK ROADMAP */}
           {activeTab === "roadmap" && (
-            <div className="space-y-4">
-              <div className="p-5 rounded-xl bg-[#202A23] border border-[#344236] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-6">
+              <div className="p-6 rounded-3xl bg-[#111714] border border-[#344236] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-base font-bold text-[#F5F0E5]">
+                  <h3 className="text-xl font-serif text-[#F5F0E5]">
                     Adaptive 8-Week Structured Roadmap
                   </h3>
-                  <p className="text-xs text-[#AAB9A9] mt-0.5">
-                    Adapted to your {currentGoal.replace(/_/g, " ")} track with milestone-driven demonstrable outputs.
+                  <p className="text-xs text-[#AAB9A9] mt-0.5 font-light">
+                    Calibrated to your {currentGoal.replace(/_/g, " ")} track with milestone-driven outputs.
                   </p>
                 </div>
                 {onOpenRoadmap && (
@@ -577,46 +815,49 @@ export function UserDashboardModal({
                       onClose();
                       onOpenRoadmap();
                     }}
-                    className="px-5 py-2.5 bg-[#B6C899] hover:bg-[#F5F0E5] text-[#111714] text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 self-start sm:self-auto"
+                    className="px-6 py-3 bg-[#B6C899] hover:bg-[#c8d8b0] text-[#0B0F0D] text-xs font-semibold uppercase tracking-wider rounded-full transition-all shadow-[0_0_20px_rgba(182,200,153,0.3)] flex items-center gap-2"
                   >
-                    <span>Launch Full Interactive Roadmap</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>Launch Full Interactive View</span>
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { week: 1, title: "Foundation & Narrative", status: "Active" },
-                  { week: 2, title: "Technical Core Refresher", status: "Upcoming" },
-                  { week: 3, title: "Applied Work Sample Sprint", status: "Upcoming" },
-                  { week: 4, title: "Mock Interview & Narrative", status: "Upcoming" },
-                  { week: 5, title: "Portfolio Capstone Build", status: "Target" },
-                  { week: 6, title: "Mentorship Alignment", status: "Target" },
-                  { week: 7, title: "Direct Returnship Outreach", status: "Target" },
-                  { week: 8, title: "Tenure & Negotiation", status: "Final" },
+                  { week: 1, title: "Foundation & Narrative", status: "Active", desc: "Reframe hiatus & map transferable skills" },
+                  { week: 2, title: "Technical Core Refresher", status: "Upcoming", desc: "Modern cloud workflows & AI productivity" },
+                  { week: 3, title: "Applied Work Sample Sprint", status: "Upcoming", desc: "Build tangible repository proof" },
+                  { week: 4, title: "Mock Interview & Narrative", status: "Upcoming", desc: "1:1 coaching with executive returnee" },
+                  { week: 5, title: "Portfolio Capstone Build", status: "Target", desc: "Complete production-ready mini project" },
+                  { week: 6, title: "Mentorship Alignment", status: "Target", desc: "Review dossier with industry leader" },
+                  { week: 7, title: "Direct Returnship Outreach", status: "Target", desc: "Apply with verified Career Passport" },
+                  { week: 8, title: "Tenure & Negotiation", status: "Final", desc: "Stipend parity & full conversion plan" },
                 ].map((w) => (
-                  <div key={w.week} className="p-3.5 rounded-xl bg-[#171F1A] border border-[#344236] space-y-1 text-xs">
+                  <div key={w.week} className="p-5 rounded-2xl bg-[#111714] border border-[#344236] space-y-2 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-[#B6C899] font-bold">Week {w.week}</span>
-                      <span className="text-[10px] text-[#AAB9A9]">{w.status}</span>
+                      <span className="font-mono text-[#B6C899] font-bold">Week 0{w.week}</span>
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${w.status === "Active" ? "bg-[#B6C899]/20 text-[#B6C899]" : "text-[#AAB9A9]"}`}>
+                        {w.status}
+                      </span>
                     </div>
-                    <div className="text-[#F5F0E5] font-semibold">{w.title}</div>
+                    <div className="text-[#F5F0E5] font-serif text-base">{w.title}</div>
+                    <p className="text-[11px] text-[#AAB9A9] font-light leading-relaxed">{w.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* TAB 3: CONFIDENCE JOURNAL PREVIEW */}
+          {/* TAB 3: CONFIDENCE JOURNAL */}
           {activeTab === "confidence" && (
-            <div className="space-y-4">
-              <div className="p-5 rounded-xl bg-[#202A23] border border-[#344236] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-6">
+              <div className="p-6 rounded-3xl bg-[#111714] border border-[#344236] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-base font-bold text-[#F5F0E5]">
-                    Confidence & Milestone Action Journal
+                  <h3 className="text-xl font-serif text-[#F5F0E5]">
+                    Confidence &amp; Milestone Action Journal
                   </h3>
-                  <p className="text-xs text-[#AAB9A9] mt-0.5">
+                  <p className="text-xs text-[#AAB9A9] mt-0.5 font-light">
                     Build confidence through tangible proof: work samples, pitch drafts, and private self-reported check-ins.
                   </p>
                 </div>
@@ -627,21 +868,21 @@ export function UserDashboardModal({
                       onClose();
                       onOpenConfidence();
                     }}
-                    className="px-5 py-2.5 bg-[#B6C899] hover:bg-[#F5F0E5] text-[#111714] text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 self-start sm:self-auto"
+                    className="px-6 py-3 bg-[#B6C899] hover:bg-[#c8d8b0] text-[#0B0F0D] text-xs font-semibold uppercase tracking-wider rounded-full transition-all shadow-[0_0_20px_rgba(182,200,153,0.3)] flex items-center gap-2"
                   >
-                    <Heart className="w-3.5 h-3.5" />
-                    <span>Open Confidence Journal</span>
+                    <Heart className="w-4 h-4" />
+                    <span>Open Interactive Journal</span>
                   </button>
                 )}
               </div>
 
-              <div className="p-4 bg-[#171F1A] border border-[#344236] rounded-xl text-xs text-[#AAB9A9] space-y-2">
+              <div className="p-6 bg-[#111714] border border-[#344236] rounded-3xl text-xs text-[#AAB9A9] space-y-3">
                 <div className="flex items-center gap-2 text-[#F5F0E5] font-semibold">
                   <Shield className="w-4 h-4 text-[#B6C899]" />
-                  <span>Ethical Non-Evaluative Journal</span>
+                  <span>Ethical Non-Evaluative Journal Design</span>
                 </div>
-                <p>
-                  Zero streaks, zero shaming counters, and zero biometric camera scoring. Your confidence journal is strictly private personal tracking.
+                <p className="leading-relaxed font-light text-sm">
+                  Zero streaks, zero shaming counters, and zero biometric camera scoring. Your confidence journal is strictly private personal tracking, empowering you without surveillance.
                 </p>
               </div>
             </div>
@@ -649,15 +890,15 @@ export function UserDashboardModal({
 
           {/* TAB 4: SKILLS & LEARNING */}
           {activeTab === "learning" && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Verified Skills */}
-                <div className="p-5 bg-[#171F1A] border border-[#344236] rounded-xl space-y-3">
-                  <h3 className="text-xs font-bold text-[#F5F0E5] flex items-center gap-1.5 uppercase tracking-wider">
+                <div className="p-6 bg-[#111714] border border-[#344236] rounded-3xl space-y-4">
+                  <h3 className="text-xs font-bold text-[#F5F0E5] flex items-center gap-1.5 uppercase tracking-wider font-mono">
                     <CheckCircle className="w-3.5 h-3.5 text-[#B6C899]" />
-                    Verified & Reported Capabilities
+                    Verified &amp; Reported Capabilities
                   </h3>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {(
                       candidateProfile?.skills?.map((s: any) => s.name || s) || [
                         "Python",
@@ -670,7 +911,7 @@ export function UserDashboardModal({
                     ).map((sk: string) => (
                       <span
                         key={sk}
-                        className="px-2.5 py-1 bg-[#202A23] rounded-md text-xs text-[#F5F0E5] border border-[#344236]"
+                        className="px-3 py-1.5 bg-[#1B231E] rounded-xl text-xs text-[#F5F0E5] border border-[#344236] font-mono"
                       >
                         {sk}
                       </span>
@@ -678,33 +919,33 @@ export function UserDashboardModal({
                   </div>
                 </div>
 
-                {/* Recommended Modules */}
-                <div className="p-5 bg-[#171F1A] border border-[#344236] rounded-xl space-y-3">
-                  <h3 className="text-xs font-bold text-[#F5F0E5] flex items-center gap-1.5 uppercase tracking-wider">
+                {/* Active Learning Modules */}
+                <div className="p-6 bg-[#111714] border border-[#344236] rounded-3xl space-y-4">
+                  <h3 className="text-xs font-bold text-[#F5F0E5] flex items-center gap-1.5 uppercase tracking-wider font-mono">
                     <BookOpen className="w-3.5 h-3.5 text-[#B6C899]" />
                     Active Learning Modules
                   </h3>
-                  <div className="space-y-2">
-                    <div className="p-3 bg-[#202A23] rounded-lg space-y-1">
+                  <div className="space-y-3">
+                    <div className="p-4 bg-[#1B231E] rounded-2xl border border-[#344236] space-y-2">
                       <div className="flex justify-between text-xs">
                         <span className="font-semibold text-[#F5F0E5]">
-                          Modern Workplace Technologies & AI Assistants
+                          Modern Workplace Technologies &amp; AI Assistants
                         </span>
-                        <span className="text-[#B6C899] font-mono">Verified Track</span>
+                        <span className="text-[#B6C899] font-mono text-[11px]">Verified Track</span>
                       </div>
-                      <div className="w-full h-1.5 bg-[#111714] rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-[#0B0F0D] rounded-full overflow-hidden">
                         <div className="w-[65%] h-full bg-[#B6C899] rounded-full" />
                       </div>
                     </div>
 
-                    <div className="p-3 bg-[#202A23] rounded-lg space-y-1">
+                    <div className="p-4 bg-[#1B231E] rounded-2xl border border-[#344236] space-y-2">
                       <div className="flex justify-between text-xs">
                         <span className="font-semibold text-[#F5F0E5]">
-                          Data Analytics & Returnship Portfolio Refresher
+                          Data Analytics &amp; Returnship Portfolio Refresher
                         </span>
-                        <span className="text-[#B6C899] font-mono">Hands-on</span>
+                        <span className="text-[#B6C899] font-mono text-[11px]">Hands-on</span>
                       </div>
-                      <div className="w-full h-1.5 bg-[#111714] rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-[#0B0F0D] rounded-full overflow-hidden">
                         <div className="w-[40%] h-full bg-[#B6C899] rounded-full" />
                       </div>
                     </div>
@@ -716,12 +957,12 @@ export function UserDashboardModal({
 
           {/* TAB 5: PRIVACY & DPDP ACT */}
           {activeTab === "privacy" && (
-            <div className="p-6 rounded-xl bg-[#171F1A] border border-[#344236] space-y-4">
+            <div className="p-7 rounded-3xl bg-[#111714] border border-[#344236] space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Lock className="w-4 h-4 text-[#B6C899]" />
                   <span className="text-xs font-mono uppercase tracking-wider text-[#F5F0E5]">
-                    PRIVACY & CONSENT SETTINGS
+                    PRIVACY &amp; CONSENT SETTINGS
                   </span>
                 </div>
                 {privacySaved && (
@@ -731,13 +972,13 @@ export function UserDashboardModal({
                 )}
               </div>
 
-              <p className="text-xs text-[#AAB9A9] leading-relaxed">
-                Your profile is private by default. Control exactly who can view your credentials,
+              <p className="text-xs text-[#AAB9A9] leading-relaxed font-light">
+                Your profile is private by default under India&apos;s DPDP Act 2023. Control exactly who can view your credentials,
                 verified passport, and career break context.
               </p>
 
               <div className="space-y-3 font-mono text-xs pt-2">
-                <label className="flex items-center justify-between p-3 rounded-lg bg-[#202A23] border border-[#344236] cursor-pointer">
+                <label className="flex items-center justify-between p-4 rounded-2xl bg-[#1B231E] border border-[#344236] cursor-pointer">
                   <div>
                     <span className="text-[#F5F0E5] block font-medium">Profile Visibility</span>
                     <span className="text-[11px] text-[#AAB9A9]">
@@ -763,14 +1004,13 @@ export function UserDashboardModal({
                   </button>
                 </label>
 
-                <label className="flex items-center justify-between p-3 rounded-lg bg-[#202A23] border border-[#344236] cursor-pointer">
+                <label className="flex items-center justify-between p-4 rounded-2xl bg-[#1B231E] border border-[#344236] cursor-pointer">
                   <div>
                     <span className="text-[#F5F0E5] block font-medium">
                       Career Passport Employer Sharing
                     </span>
                     <span className="text-[11px] text-[#AAB9A9]">
-                      Explicit consent required to transmit verified pre-break tenure & capstone
-                      records.
+                      Explicit consent required to transmit verified pre-break tenure &amp; capstone records.
                     </span>
                   </div>
                   <input
@@ -784,12 +1024,12 @@ export function UserDashboardModal({
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-3 rounded-lg bg-[#202A23] border border-[#344236] cursor-pointer">
+                <label className="flex items-center justify-between p-4 rounded-2xl bg-[#1B231E] border border-[#344236] cursor-pointer">
                   <div>
-                    <span className="text-[#F5EDE4] block font-medium">
+                    <span className="text-[#F5F0E5] block font-medium">
                       Career Break Reason (Optional)
                     </span>
-                    <span className="text-[11px] text-[#A89B90]">
+                    <span className="text-[11px] text-[#AAB9A9]">
                       Keep sensitive caregiving or medical reasons private during employer review.
                     </span>
                   </div>
@@ -804,14 +1044,13 @@ export function UserDashboardModal({
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-3 rounded-lg bg-[#202A23] border border-[#344236] cursor-pointer">
+                <label className="flex items-center justify-between p-4 rounded-2xl bg-[#1B231E] border border-[#344236] cursor-pointer">
                   <div>
                     <span className="text-[#F5F0E5] block font-medium">
                       Algorithmic Recommendation Transparency
                     </span>
                     <span className="text-[11px] text-[#AAB9A9]">
-                      Opt-out of automated ranking to view all opportunities chronologically without
-                      scoring algorithms.
+                      Opt-out of automated ranking to view all opportunities chronologically without scoring algorithms.
                     </span>
                   </div>
                   <input
@@ -861,13 +1100,13 @@ export function UserDashboardModal({
                     </button>
                   </div>
 
-                  <span className="text-[10px] font-mono text-[#697D69]">
+                  <span className="text-[10px] font-mono text-[#536B58]">
                     DPDP Act 2023 Compliant • Grievance: privacy@gfg-platform.org
                   </span>
                 </div>
 
                 {privacyMessage && (
-                  <div className="p-2.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs font-mono flex items-center gap-2">
+                  <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs font-mono flex items-center gap-2">
                     <CheckCircle className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
                     <span>{privacyMessage}</span>
                   </div>

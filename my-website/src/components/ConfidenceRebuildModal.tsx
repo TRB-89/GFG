@@ -179,7 +179,7 @@ export function ConfidenceRebuildModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="confidence-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#0E1310]/85 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#0B0F0D]/90 backdrop-blur-xl backdrop-blur-md overflow-y-auto"
     >
       <div className="relative w-full max-w-4xl bg-[#1B231E] border border-[#344236] rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden text-[#F5F0E5] font-sans">
         {/* HEADER */}
@@ -216,7 +216,7 @@ export function ConfidenceRebuildModal({
         </div>
 
         {/* NAVIGATION TABS */}
-        <div className="px-6 border-b border-[#344236] flex items-center gap-6 bg-[#171F1A] text-xs font-medium">
+        <div className="px-6 border-b border-[#344236] flex items-center gap-6 bg-[#111714] text-xs font-medium">
           <button
             onClick={() => setActiveTab("milestones")}
             className={`py-3 border-b-2 transition-all flex items-center gap-2 ${
@@ -250,7 +250,7 @@ export function ConfidenceRebuildModal({
               <strong>Ethical Confidence Engine:</strong> No shaming streaks • No video/camera biometrics • Strictly private personal journal.
             </span>
           </div>
-          <span className="text-[10px] text-[#697D69] hidden sm:inline">DPDP Act Compliant</span>
+          <span className="text-[10px] text-[#536B58] hidden sm:inline">DPDP Act Compliant</span>
         </div>
 
         {/* FEEDBACK STATUS */}
@@ -295,7 +295,7 @@ export function ConfidenceRebuildModal({
 
               {/* Add Custom Goal Modal / Drawer */}
               {showAddGoal && (
-                <div className="p-4 rounded-xl bg-[#171F1A] border border-[#B6C899]/40 space-y-4">
+                <div className="p-4 rounded-xl bg-[#111714] border border-[#B6C899]/40 space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-mono uppercase text-[#B6C899] font-bold">
                       Add New Practical Milestone
@@ -382,8 +382,8 @@ export function ConfidenceRebuildModal({
                       key={goal.id}
                       className={`p-4 rounded-xl border transition-all ${
                         isCompleted
-                          ? "bg-[#171F1A] border-[#344236]"
-                          : "bg-[#202A23] border-[#344236] hover:border-[#697D69]"
+                          ? "bg-[#111714] border-[#344236]"
+                          : "bg-[#202A23] border-[#344236] hover:border-[#536B58]"
                       }`}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -421,7 +421,7 @@ export function ConfidenceRebuildModal({
                           )}
 
                           {goal.action_plan && (
-                            <div className="text-[11px] text-[#697D69]">
+                            <div className="text-[11px] text-[#536B58]">
                               <strong>Action Plan:</strong> {goal.action_plan}
                             </div>
                           )}
@@ -523,7 +523,7 @@ export function ConfidenceRebuildModal({
                         className={`p-3 rounded-xl border text-center transition-all ${
                           checkInScore === s.num
                             ? "bg-[#B6C899] text-[#111714] border-[#B6C899] font-bold shadow-sm"
-                            : "bg-[#171F1A] text-[#AAB9A9] border-[#344236] hover:border-[#697D69]"
+                            : "bg-[#111714] text-[#AAB9A9] border-[#344236] hover:border-[#536B58]"
                         }`}
                       >
                         <div className="text-base font-bold font-mono">{s.num}</div>
@@ -544,7 +544,7 @@ export function ConfidenceRebuildModal({
                     value={checkInReflection}
                     onChange={(e) => setCheckInReflection(e.target.value)}
                     placeholder="e.g. Completed my first end-to-end Python script and realized my pre-break problem solving returned quickly."
-                    className="w-full px-3 py-2 bg-[#171F1A] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
+                    className="w-full px-3 py-2 bg-[#111714] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                   />
                 </div>
 
@@ -558,7 +558,7 @@ export function ConfidenceRebuildModal({
                     value={checkInStrengths}
                     onChange={(e) => setCheckInStrengths(e.target.value)}
                     placeholder="e.g. Structured logic, resilience, clear communication"
-                    className="w-full px-3 py-2 bg-[#171F1A] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
+                    className="w-full px-3 py-2 bg-[#111714] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                   />
                 </div>
 
@@ -582,14 +582,14 @@ export function ConfidenceRebuildModal({
                 </h4>
 
                 {checkIns.length === 0 ? (
-                  <div className="p-4 rounded-xl bg-[#171F1A] border border-[#344236] text-xs text-[#AAB9A9] text-center">
+                  <div className="p-4 rounded-xl bg-[#111714] border border-[#344236] text-xs text-[#AAB9A9] text-center">
                     No check-ins recorded yet. Log your first check-in above to begin tracking your personal momentum!
                   </div>
                 ) : (
                   checkIns.map((ci) => (
                     <div
                       key={ci.id}
-                      className="p-4 rounded-xl bg-[#171F1A] border border-[#344236] space-y-2 text-xs"
+                      className="p-4 rounded-xl bg-[#111714] border border-[#344236] space-y-2 text-xs"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -612,7 +612,7 @@ export function ConfidenceRebuildModal({
                       )}
 
                       {ci.noted_strengths && (
-                        <div className="text-[11px] text-[#697D69]">
+                        <div className="text-[11px] text-[#536B58]">
                           <strong>Strength:</strong> {ci.noted_strengths}
                         </div>
                       )}
@@ -626,7 +626,7 @@ export function ConfidenceRebuildModal({
 
         {/* MODAL / DRAWER FOR COMPLETING A MILESTONE */}
         {completingGoal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0E1310]/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B0F0D]/90 backdrop-blur-xl backdrop-blur-sm">
             <div className="w-full max-w-lg bg-[#1B231E] border border-[#344236] rounded-2xl p-6 shadow-2xl space-y-4 text-[#F5F0E5]">
               <div className="flex items-center justify-between">
                 <div>
@@ -654,7 +654,7 @@ export function ConfidenceRebuildModal({
                   value={evidenceUrl}
                   onChange={(e) => setEvidenceUrl(e.target.value)}
                   placeholder="https://github.com/... or Google Doc or Loom link"
-                  className="w-full px-3 py-2 bg-[#171F1A] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
+                  className="w-full px-3 py-2 bg-[#111714] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                 />
                 <span className="text-[11px] text-[#AAB9A9] mt-0.5 block">
                   Link to your project code, portfolio case study, or return-to-work pitch.
@@ -671,7 +671,7 @@ export function ConfidenceRebuildModal({
                   value={userReflection}
                   onChange={(e) => setUserReflection(e.target.value)}
                   placeholder="What felt challenging? What went better than expected? What strength did you demonstrate?"
-                  className="w-full px-3 py-2 bg-[#171F1A] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
+                  className="w-full px-3 py-2 bg-[#111714] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                 />
               </div>
 

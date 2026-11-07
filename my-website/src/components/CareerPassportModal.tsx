@@ -280,8 +280,8 @@ export function CareerPassportModal({
       case "self_reported":
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-[#222222] text-[#9A9A9A] border border-[#D8C2A6]/15">
-            <FileText className="w-3 h-3 text-[#9A9A9A]" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-[#202A23] text-[#AAB9A9] border border-[#344236]">
+            <FileText className="w-3 h-3 text-[#AAB9A9]" />
             <span>Self-Reported</span>
           </span>
         );
@@ -289,30 +289,30 @@ export function CareerPassportModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-6xl bg-[#141414] text-[#F1E7DB] rounded-2xl border border-[#D8C2A6]/25 shadow-2xl relative max-h-[92vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#0B0F0D]/90 backdrop-blur-xl backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+      <div className="w-full max-w-6xl bg-[#0B0F0D] text-[#F5F0E5] rounded-2xl border border-[#344236] shadow-2xl relative max-h-[92vh] flex flex-col overflow-hidden">
         
         {/* TOP EDITORIAL HEADER BAR */}
-        <div className="p-6 sm:p-8 border-b border-[#D8C2A6]/15 bg-[#181818]/90 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+        <div className="p-6 sm:p-8 border-b border-[#344236] bg-[#111714]/90 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
           <div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1.5">
-              <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#A56F7C]">
+              <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#536B58]">
                 GFG PROTOCOL // MODULE 6
               </span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider">
                 V2.0 PORTABLE SPECIFICATION
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-[#111111] border border-[#D8C2A6]/20 text-[#D8C2A6] text-[10px] font-mono uppercase">
+              <span className="px-2 py-0.5 rounded-full bg-[#1B231E] border border-[#344236] text-[#B6C899] text-[10px] font-mono uppercase">
                 {activeTab === "preview" ? "EMPLOYER PERSPECTIVE" : "CANDIDATE GOVERNANCE"}
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-[#F1E7DB] flex items-center gap-3">
+            <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-[#F5F0E5] flex items-center gap-3">
               <span>Verified Career Passport 2.0</span>
-              <span className="text-xs font-mono font-normal text-[#9A9A9A] border border-[#D8C2A6]/20 px-2 py-0.5 rounded">
+              <span className="text-xs font-mono font-normal text-[#AAB9A9] border border-[#344236] px-2 py-0.5 rounded">
                 {activeView?.passport_id || "GFG-PASS-2026-088"}
               </span>
             </h2>
-            <p className="text-xs text-[#9A9A9A] mt-1 font-mono">
+            <p className="text-xs text-[#AAB9A9] mt-1 font-mono">
               Portable professional evidence integrating verified experience, skills, assessments, and candidate-controlled privacy.
             </p>
           </div>
@@ -323,7 +323,7 @@ export function CareerPassportModal({
               onClick={handleDownloadPdf}
               disabled={isDownloadingPdf}
               title="Generate a clean, print-ready, candidate-filtered PDF"
-              className="px-4 py-2 rounded-lg bg-[#D8C2A6] text-[#111111] hover:bg-[#F1E7DB] disabled:opacity-50 disabled:cursor-not-allowed text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center gap-2 shadow-sm"
+              className="px-4 py-2 rounded-lg bg-[#B6C899] text-[#1B231E] hover:bg-[#F5F0E5] disabled:opacity-50 disabled:cursor-not-allowed text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center gap-2 shadow-sm"
             >
               <Download className={`w-3.5 h-3.5 ${isDownloadingPdf ? "animate-bounce" : ""}`} />
               <span>{isDownloadingPdf ? "Downloading..." : "Download Official PDF"}</span>
@@ -331,7 +331,7 @@ export function CareerPassportModal({
 
             <button
               onClick={onClose}
-              className="p-2 rounded-lg bg-[#111111] border border-[#D8C2A6]/20 text-[#9A9A9A] hover:text-[#F1E7DB] hover:bg-white/5 transition-all"
+              className="p-2 rounded-lg bg-[#1B231E] border border-[#344236] text-[#AAB9A9] hover:text-[#F5F0E5] hover:bg-white/5 transition-all"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -363,13 +363,13 @@ export function CareerPassportModal({
         )}
 
         {/* TABS NAVIGATION */}
-        <div className="px-6 sm:px-8 border-b border-[#D8C2A6]/15 bg-[#181818]/60 flex items-center gap-2 overflow-x-auto shrink-0 py-2">
+        <div className="px-6 sm:px-8 border-b border-[#344236] bg-[#111714]/60 flex items-center gap-2 overflow-x-auto shrink-0 py-2">
           <button
             onClick={() => setActiveTab("passport")}
             className={`px-3 py-2 rounded-lg text-xs font-mono uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
               activeTab === "passport"
-                ? "bg-[#F1E7DB] text-[#111111] font-semibold"
-                : "text-[#9A9A9A] hover:text-[#F1E7DB] hover:bg-white/5"
+                ? "bg-[#F5F0E5] text-[#1B231E] font-semibold"
+                : "text-[#AAB9A9] hover:text-[#F5F0E5] hover:bg-white/5"
             }`}
           >
             <FileCheck className="w-3.5 h-3.5" />
@@ -380,8 +380,8 @@ export function CareerPassportModal({
             onClick={() => setActiveTab("preview")}
             className={`px-3 py-2 rounded-lg text-xs font-mono uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
               activeTab === "preview"
-                ? "bg-[#D8C2A6] text-[#111111] font-semibold"
-                : "text-[#9A9A9A] hover:text-[#F1E7DB] hover:bg-white/5"
+                ? "bg-[#B6C899] text-[#1B231E] font-semibold"
+                : "text-[#AAB9A9] hover:text-[#F5F0E5] hover:bg-white/5"
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
@@ -393,8 +393,8 @@ export function CareerPassportModal({
             onClick={() => setActiveTab("privacy")}
             className={`px-3 py-2 rounded-lg text-xs font-mono uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
               activeTab === "privacy"
-                ? "bg-[#A56F7C] text-[#F1E7DB] font-semibold"
-                : "text-[#9A9A9A] hover:text-[#F1E7DB] hover:bg-white/5"
+                ? "bg-[#536B58] text-[#F5F0E5] font-semibold"
+                : "text-[#AAB9A9] hover:text-[#F5F0E5] hover:bg-white/5"
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
@@ -405,8 +405,8 @@ export function CareerPassportModal({
             onClick={() => setActiveTab("grants")}
             className={`px-3 py-2 rounded-lg text-xs font-mono uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
               activeTab === "grants"
-                ? "bg-[#A56F7C] text-[#F1E7DB] font-semibold"
-                : "text-[#9A9A9A] hover:text-[#F1E7DB] hover:bg-white/5"
+                ? "bg-[#536B58] text-[#F5F0E5] font-semibold"
+                : "text-[#AAB9A9] hover:text-[#F5F0E5] hover:bg-white/5"
             }`}
           >
             <Share2 className="w-3.5 h-3.5" />
@@ -422,8 +422,8 @@ export function CareerPassportModal({
             onClick={() => setActiveTab("evidence")}
             className={`px-3 py-2 rounded-lg text-xs font-mono uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
               activeTab === "evidence"
-                ? "bg-[#A56F7C] text-[#F1E7DB] font-semibold"
-                : "text-[#9A9A9A] hover:text-[#F1E7DB] hover:bg-white/5"
+                ? "bg-[#536B58] text-[#F5F0E5] font-semibold"
+                : "text-[#AAB9A9] hover:text-[#F5F0E5] hover:bg-white/5"
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -432,11 +432,11 @@ export function CareerPassportModal({
         </div>
 
         {/* TAB CONTENTS (SCROLLABLE BODY) */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 bg-[#111111]">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 bg-[#1B231E]">
           {isLoading ? (
             <div className="py-24 text-center space-y-4">
-              <RefreshCw className="w-8 h-8 text-[#D8C2A6] animate-spin mx-auto" />
-              <p className="font-mono text-xs uppercase tracking-wider text-[#9A9A9A]">
+              <RefreshCw className="w-8 h-8 text-[#B6C899] animate-spin mx-auto" />
+              <p className="font-mono text-xs uppercase tracking-wider text-[#AAB9A9]">
                 Assembling cryptographically verified career credentials...
               </p>
             </div>
@@ -447,13 +447,13 @@ export function CareerPassportModal({
                 <div className="space-y-8 max-w-5xl mx-auto">
                   {/* Employer Perspective Notice Banner if in preview mode */}
                   {activeTab === "preview" && (
-                    <div className="p-4 rounded-xl bg-[#181818] border border-emerald-500/30 flex items-start gap-3">
+                    <div className="p-4 rounded-xl bg-[#111714] border border-emerald-500/30 flex items-start gap-3">
                       <Eye className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                       <div>
                         <span className="text-xs font-mono uppercase tracking-wider text-emerald-300 block font-semibold">
                           Live Employer Preview Mode
                         </span>
-                        <p className="text-xs text-[#D8C2A6] mt-0.5 leading-relaxed font-mono">
+                        <p className="text-xs text-[#B6C899] mt-0.5 leading-relaxed font-mono">
                           This preview represents precisely what prospective employers and verified hiring partners will see. 
                           {activeView?.is_employer_view && " Private documents, unapproved fields, and candidate-restricted details have been safely sanitized."}
                         </p>
@@ -462,42 +462,42 @@ export function CareerPassportModal({
                   )}
 
                   {/* 1. PROFESSIONAL INTRODUCTION */}
-                  <section className="p-6 sm:p-8 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 relative">
+                  <section className="p-6 sm:p-8 rounded-xl bg-[#111714] border border-[#344236] relative">
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C]">
+                          <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58]">
                             SECTION 01 // PROFESSIONAL INTRODUCTION
                           </span>
                           {renderVerificationBadge("independently_verified")}
                         </div>
-                        <h3 className="text-3xl font-light text-[#F1E7DB] tracking-tight">
+                        <h3 className="text-3xl font-light text-[#F5F0E5] tracking-tight">
                           {activeView?.professional_introduction?.full_name || "Ananya Raman"}
                         </h3>
-                        <p className="text-base text-[#D8C2A6] font-medium">
+                        <p className="text-base text-[#B6C899] font-medium">
                           {activeView?.professional_introduction?.headline || "Senior Data & BI Engineer (Returning Professional)"}
                         </p>
-                        <p className="text-xs text-[#D8C2A6]/90 leading-relaxed font-sans max-w-2xl pt-2">
+                        <p className="text-xs text-[#B6C899]/90 leading-relaxed font-sans max-w-2xl pt-2">
                           {activeView?.professional_introduction?.summary_bio ||
                             "Experienced data specialist with 4.5 years in scalable SQL architecture and BI dashboards, returning via structured hands-on projects."}
                         </p>
                       </div>
 
-                      <div className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 space-y-2 font-mono text-xs shrink-0 min-w-[240px]">
+                      <div className="p-4 rounded-lg bg-[#1B231E] border border-[#344236] space-y-2 font-mono text-xs shrink-0 min-w-[240px]">
                         <div>
-                          <span className="text-[#9A9A9A] text-[10px] uppercase block">CONTACT EMAIL</span>
-                          <span className="text-[#F1E7DB]">
+                          <span className="text-[#AAB9A9] text-[10px] uppercase block">CONTACT EMAIL</span>
+                          <span className="text-[#F5F0E5]">
                             {activeView?.professional_introduction?.email || "[Private / Protected]"}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[#9A9A9A] text-[10px] uppercase block">LOCATION</span>
-                          <span className="text-[#F1E7DB]">
+                          <span className="text-[#AAB9A9] text-[10px] uppercase block">LOCATION</span>
+                          <span className="text-[#F5F0E5]">
                             {activeView?.professional_introduction?.location || "Bengaluru, India"}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[#9A9A9A] text-[10px] uppercase block">READINESS TIER</span>
+                          <span className="text-[#AAB9A9] text-[10px] uppercase block">READINESS TIER</span>
                           <span className="text-emerald-400 font-semibold">
                             {activeView?.professional_introduction?.readiness_tier || "Tier 1: Ready to Return"}
                           </span>
@@ -507,17 +507,17 @@ export function CareerPassportModal({
                   </section>
 
                   {/* 2. CAREER TIMELINE */}
-                  <section className="p-6 sm:p-8 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#D8C2A6]/10 pb-4">
+                  <section className="p-6 sm:p-8 rounded-xl bg-[#111714] border border-[#344236] space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#344236]/60 pb-4">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 02 // CAREER TIMELINE
                         </span>
-                        <h4 className="text-xl font-light text-[#F1E7DB]">Professional Continuity Milestones</h4>
+                        <h4 className="text-xl font-light text-[#F5F0E5]">Professional Continuity Milestones</h4>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono text-[#9A9A9A] uppercase">BREAK MODE:</span>
-                        <span className="px-2 py-0.5 rounded bg-[#111111] text-[#D8C2A6] text-[10px] font-mono uppercase border border-[#D8C2A6]/20">
+                        <span className="text-[10px] font-mono text-[#AAB9A9] uppercase">BREAK MODE:</span>
+                        <span className="px-2 py-0.5 rounded bg-[#1B231E] text-[#B6C899] text-[10px] font-mono uppercase border border-[#344236]">
                           {activeView?.career_timeline?.break_display_mode || breakMode}
                         </span>
                       </div>
@@ -531,36 +531,36 @@ export function CareerPassportModal({
                             key={idx}
                             className={`p-4 rounded-lg border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                               isBreak
-                                ? "bg-[#1d1618] border-[#A56F7C]/40"
-                                : "bg-[#111111] border-[#D8C2A6]/15 hover:border-[#D8C2A6]/30"
+                                ? "bg-[#1B231E] border-[#536B58]/40"
+                                : "bg-[#1B231E] border-[#344236] hover:border-[#B6C899]/50"
                             }`}
                           >
                             <div className="flex items-start gap-3.5">
                               <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                                  isBreak ? "bg-[#A56F7C]/20 text-[#A56F7C]" : "bg-[#D8C2A6]/15 text-[#D8C2A6]"
+                                  isBreak ? "bg-[#536B58]/20 text-[#536B58]" : "bg-[#B6C899]/15 text-[#B6C899]"
                                 }`}
                               >
                                 {isBreak ? <Clock className="w-4 h-4" /> : <Briefcase className="w-4 h-4" />}
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <h5 className="text-sm font-medium text-[#F1E7DB]">{milestone.title}</h5>
+                                  <h5 className="text-sm font-medium text-[#F5F0E5]">{milestone.title}</h5>
                                   {isBreak ? (
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-[#A56F7C]/20 text-[#A56F7C] border border-[#A56F7C]/30">
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-[#536B58]/20 text-[#536B58] border border-[#536B58]/30">
                                       Candidate Governed
                                     </span>
                                   ) : (
                                     renderVerificationBadge(milestone.verification_level)
                                   )}
                                 </div>
-                                <p className="text-xs text-[#D8C2A6] font-mono mt-0.5">
+                                <p className="text-xs text-[#B6C899] font-mono mt-0.5">
                                   {milestone.organization_or_context}
                                 </p>
-                                <p className="text-xs text-[#9A9A9A] mt-1 font-sans">{milestone.description}</p>
+                                <p className="text-xs text-[#AAB9A9] mt-1 font-sans">{milestone.description}</p>
                               </div>
                             </div>
-                            <div className="text-right font-mono text-xs text-[#9A9A9A] shrink-0">
+                            <div className="text-right font-mono text-xs text-[#AAB9A9] shrink-0">
                               <span>{milestone.period}</span>
                             </div>
                           </div>
@@ -572,31 +572,31 @@ export function CareerPassportModal({
                   {/* 3. PREVIOUS EMPLOYMENT & 4. EDUCATION (2 COLUMNS) */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* SECTION 03: PREVIOUS EMPLOYMENT */}
-                    <section className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                    <section className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 03 // PREVIOUS EMPLOYMENT
                         </span>
-                        <h4 className="text-lg font-light text-[#F1E7DB]">Employment History</h4>
+                        <h4 className="text-lg font-light text-[#F5F0E5]">Employment History</h4>
                       </div>
 
                       <div className="space-y-3">
                         {activeView?.previous_employment?.roles?.map((role: any, idx: number) => (
-                          <div key={idx} className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 space-y-2">
+                          <div key={idx} className="p-4 rounded-lg bg-[#1B231E] border border-[#344236] space-y-2">
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <h5 className="text-sm font-medium text-[#F1E7DB]">{role.title}</h5>
-                                <span className="text-xs text-[#D8C2A6] font-mono block">{role.company}</span>
+                                <h5 className="text-sm font-medium text-[#F5F0E5]">{role.title}</h5>
+                                <span className="text-xs text-[#B6C899] font-mono block">{role.company}</span>
                               </div>
                               {renderVerificationBadge(role.verification_level)}
                             </div>
-                            <div className="flex items-center gap-3 text-[11px] font-mono text-[#9A9A9A]">
+                            <div className="flex items-center gap-3 text-[11px] font-mono text-[#AAB9A9]">
                               <span>{role.duration}</span>
                               <span>•</span>
                               <span>{role.tenure_years} yrs</span>
                             </div>
-                            <p className="text-xs text-[#D8C2A6]/90 font-sans leading-relaxed">{role.achievements}</p>
-                            <div className="pt-2 border-t border-[#D8C2A6]/10 text-[10px] font-mono text-[#9A9A9A]">
+                            <p className="text-xs text-[#B6C899]/90 font-sans leading-relaxed">{role.achievements}</p>
+                            <div className="pt-2 border-t border-[#344236]/60 text-[10px] font-mono text-[#AAB9A9]">
                               SOURCE: {role.verification_source}
                             </div>
                           </div>
@@ -605,29 +605,29 @@ export function CareerPassportModal({
                     </section>
 
                     {/* SECTION 04: EDUCATION */}
-                    <section className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                    <section className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 04 // EDUCATION
                         </span>
-                        <h4 className="text-lg font-light text-[#F1E7DB]">Academic Credentials</h4>
+                        <h4 className="text-lg font-light text-[#F5F0E5]">Academic Credentials</h4>
                       </div>
 
                       <div className="space-y-3">
                         {activeView?.education?.credentials?.map((edu: any, idx: number) => (
-                          <div key={idx} className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 space-y-2">
+                          <div key={idx} className="p-4 rounded-lg bg-[#1B231E] border border-[#344236] space-y-2">
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <h5 className="text-sm font-medium text-[#F1E7DB]">{edu.degree}</h5>
-                                <span className="text-xs text-[#D8C2A6] font-mono block">{edu.institution}</span>
+                                <h5 className="text-sm font-medium text-[#F5F0E5]">{edu.degree}</h5>
+                                <span className="text-xs text-[#B6C899] font-mono block">{edu.institution}</span>
                               </div>
                               {renderVerificationBadge(edu.verification_level)}
                             </div>
-                            <div className="flex items-center gap-3 text-[11px] font-mono text-[#9A9A9A]">
+                            <div className="flex items-center gap-3 text-[11px] font-mono text-[#AAB9A9]">
                               <span>Year: {edu.year}</span>
                               {edu.honors && <span>• {edu.honors}</span>}
                             </div>
-                            <div className="pt-2 border-t border-[#D8C2A6]/10 text-[10px] font-mono text-[#9A9A9A]">
+                            <div className="pt-2 border-t border-[#344236]/60 text-[10px] font-mono text-[#AAB9A9]">
                               SOURCE: {edu.verification_source}
                             </div>
                           </div>
@@ -637,14 +637,14 @@ export function CareerPassportModal({
                   </div>
 
                   {/* 5. SKILL INVENTORY WITH 4 VERIFICATION LEVELS */}
-                  <section className="p-6 sm:p-8 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D8C2A6]/10 pb-4">
+                  <section className="p-6 sm:p-8 rounded-xl bg-[#111714] border border-[#344236] space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#344236]/60 pb-4">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 05 // SKILL INVENTORY
                         </span>
-                        <h4 className="text-xl font-light text-[#F1E7DB]">Verified Technical & Professional Competencies</h4>
-                        <p className="text-xs text-[#9A9A9A] font-mono mt-0.5">
+                        <h4 className="text-xl font-light text-[#F5F0E5]">Verified Technical & Professional Competencies</h4>
+                        <p className="text-xs text-[#AAB9A9] font-mono mt-0.5">
                           Every skill displays transparent provenance. Documents submitted start as pending review.
                         </p>
                       </div>
@@ -662,21 +662,21 @@ export function CareerPassportModal({
                       {activeView?.skill_inventory?.skills?.map((s: any, idx: number) => (
                         <div
                           key={idx}
-                          className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 hover:border-[#D8C2A6]/35 transition-all flex flex-col justify-between"
+                          className="p-4 rounded-lg bg-[#1B231E] border border-[#344236] hover:border-[#B6C899]/60 transition-all flex flex-col justify-between"
                         >
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between gap-1">
-                              <span className="text-sm font-medium text-[#F1E7DB]">{s.name}</span>
-                              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-white/5 text-[#D8C2A6]">
+                              <span className="text-sm font-medium text-[#F5F0E5]">{s.name}</span>
+                              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-white/5 text-[#B6C899]">
                                 {s.proficiency}
                               </span>
                             </div>
-                            <p className="text-[11px] text-[#9A9A9A] font-mono">{s.provenance_detail}</p>
+                            <p className="text-[11px] text-[#AAB9A9] font-mono">{s.provenance_detail}</p>
                           </div>
-                          <div className="mt-3 pt-2.5 border-t border-[#D8C2A6]/10 flex items-center justify-between">
+                          <div className="mt-3 pt-2.5 border-t border-[#344236]/60 flex items-center justify-between">
                             {renderVerificationBadge(s.verification_level)}
                             {s.verified_at && (
-                              <span className="text-[9px] font-mono text-[#9A9A9A]">
+                              <span className="text-[9px] font-mono text-[#AAB9A9]">
                                 {new Date(s.verified_at).toLocaleDateString()}
                               </span>
                             )}
@@ -689,25 +689,25 @@ export function CareerPassportModal({
                   {/* 6. COMPLETED LEARNING & 7. CERTIFICATIONS (2 COLUMNS) */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* SECTION 06: COMPLETED LEARNING */}
-                    <section className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                    <section className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 06 // COMPLETED LEARNING
                         </span>
-                        <h4 className="text-lg font-light text-[#F1E7DB]">Returnship Modules & Coursework</h4>
+                        <h4 className="text-lg font-light text-[#F5F0E5]">Returnship Modules & Coursework</h4>
                       </div>
 
                       <div className="space-y-3">
                         {activeView?.completed_learning?.courses?.map((c: any, idx: number) => (
-                          <div key={idx} className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 space-y-2">
+                          <div key={idx} className="p-4 rounded-lg bg-[#1B231E] border border-[#344236] space-y-2">
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <h5 className="text-sm font-medium text-[#F1E7DB]">{c.title}</h5>
-                                <span className="text-xs text-[#D8C2A6] font-mono block">{c.platform_or_provider}</span>
+                                <h5 className="text-sm font-medium text-[#F5F0E5]">{c.title}</h5>
+                                <span className="text-xs text-[#B6C899] font-mono block">{c.platform_or_provider}</span>
                               </div>
                               {renderVerificationBadge(c.verification_level)}
                             </div>
-                            <div className="flex items-center gap-3 text-[11px] font-mono text-[#9A9A9A]">
+                            <div className="flex items-center gap-3 text-[11px] font-mono text-[#AAB9A9]">
                               <span>Effort: {c.hours} hrs</span>
                               <span>•</span>
                               <span>Completed: {c.completed_date}</span>
@@ -718,25 +718,25 @@ export function CareerPassportModal({
                     </section>
 
                     {/* SECTION 07: CERTIFICATIONS */}
-                    <section className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                    <section className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 07 // CERTIFICATIONS
                         </span>
-                        <h4 className="text-lg font-light text-[#F1E7DB]">Verified Credentials</h4>
+                        <h4 className="text-lg font-light text-[#F5F0E5]">Verified Credentials</h4>
                       </div>
 
                       <div className="space-y-3">
                         {activeView?.certifications?.items?.map((cert: any, idx: number) => (
-                          <div key={idx} className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 space-y-2">
+                          <div key={idx} className="p-4 rounded-lg bg-[#1B231E] border border-[#344236] space-y-2">
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <h5 className="text-sm font-medium text-[#F1E7DB]">{cert.name}</h5>
-                                <span className="text-xs text-[#D8C2A6] font-mono block">{cert.issuer}</span>
+                                <h5 className="text-sm font-medium text-[#F5F0E5]">{cert.name}</h5>
+                                <span className="text-xs text-[#B6C899] font-mono block">{cert.issuer}</span>
                               </div>
                               {renderVerificationBadge(cert.verification_level)}
                             </div>
-                            <div className="flex items-center gap-3 text-[11px] font-mono text-[#9A9A9A]">
+                            <div className="flex items-center gap-3 text-[11px] font-mono text-[#AAB9A9]">
                               <span>Issued: {cert.issue_date}</span>
                               {cert.verification_id && (
                                 <>
@@ -754,27 +754,27 @@ export function CareerPassportModal({
                   {/* 8. PORTFOLIO PROJECTS & 9. PRACTICAL ASSESSMENTS (2 COLUMNS) */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* SECTION 08: PORTFOLIO PROJECTS */}
-                    <section className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                    <section className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 08 // PORTFOLIO PROJECTS
                         </span>
-                        <h4 className="text-lg font-light text-[#F1E7DB]">Capstone Repositories & Artifacts</h4>
+                        <h4 className="text-lg font-light text-[#F5F0E5]">Capstone Repositories & Artifacts</h4>
                       </div>
 
                       <div className="space-y-3">
                         {activeView?.portfolio_projects?.projects?.map((proj: any, idx: number) => (
-                          <div key={idx} className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 space-y-2">
+                          <div key={idx} className="p-4 rounded-lg bg-[#1B231E] border border-[#344236] space-y-2">
                             <div className="flex items-start justify-between gap-2">
-                              <h5 className="text-sm font-medium text-[#F1E7DB]">{proj.title}</h5>
+                              <h5 className="text-sm font-medium text-[#F5F0E5]">{proj.title}</h5>
                               {renderVerificationBadge(proj.verification_level)}
                             </div>
-                            <p className="text-xs text-[#D8C2A6]/90 font-sans leading-relaxed">{proj.description}</p>
+                            <p className="text-xs text-[#B6C899]/90 font-sans leading-relaxed">{proj.description}</p>
                             <div className="flex flex-wrap gap-1.5 pt-1">
                               {proj.technologies?.map((tech: string) => (
                                 <span
                                   key={tech}
-                                  className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#181818] border border-[#D8C2A6]/15 text-[#D8C2A6]"
+                                  className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#111714] border border-[#344236] text-[#B6C899]"
                                 >
                                   {tech}
                                 </span>
@@ -785,7 +785,7 @@ export function CareerPassportModal({
                                 href={proj.repository_link}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] font-mono text-[#A56F7C] hover:underline pt-1"
+                                className="inline-flex items-center gap-1 text-[11px] font-mono text-[#536B58] hover:underline pt-1"
                               >
                                 <span>Inspect Repository Evidence</span>
                                 <ExternalLink className="w-3 h-3" />
@@ -797,27 +797,27 @@ export function CareerPassportModal({
                     </section>
 
                     {/* SECTION 09: PRACTICAL ASSESSMENTS */}
-                    <section className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                    <section className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 09 // PRACTICAL ASSESSMENTS
                         </span>
-                        <h4 className="text-lg font-light text-[#F1E7DB]">Assessed Coding & Analytical Challenges</h4>
+                        <h4 className="text-lg font-light text-[#F5F0E5]">Assessed Coding & Analytical Challenges</h4>
                       </div>
 
                       <div className="space-y-3">
                         {activeView?.practical_assessments?.assessments?.map((ass: any, idx: number) => (
-                          <div key={idx} className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 space-y-2">
+                          <div key={idx} className="p-4 rounded-lg bg-[#1B231E] border border-[#344236] space-y-2">
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <h5 className="text-sm font-medium text-[#F1E7DB]">{ass.title}</h5>
-                                <span className="text-xs text-[#D8C2A6] font-mono block">{ass.assessor}</span>
+                                <h5 className="text-sm font-medium text-[#F5F0E5]">{ass.title}</h5>
+                                <span className="text-xs text-[#B6C899] font-mono block">{ass.assessor}</span>
                               </div>
                               {renderVerificationBadge(ass.verification_level)}
                             </div>
                             <div className="flex items-center justify-between text-xs font-mono pt-1">
-                              <span className="text-[#9A9A9A]">Score: <span className="text-emerald-400 font-semibold">{ass.score}%</span></span>
-                              <span className="text-[#9A9A9A]">Completed: {ass.completed_date}</span>
+                              <span className="text-[#AAB9A9]">Score: <span className="text-emerald-400 font-semibold">{ass.score}%</span></span>
+                              <span className="text-[#AAB9A9]">Completed: {ass.completed_date}</span>
                             </div>
                           </div>
                         ))}
@@ -828,28 +828,28 @@ export function CareerPassportModal({
                   {/* 10. MENTOR FEEDBACK & 11. CAREER PREFERENCES (2 COLUMNS) */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* SECTION 10: MENTOR FEEDBACK */}
-                    <section className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                    <section className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 10 // MENTOR FEEDBACK
                         </span>
-                        <h4 className="text-lg font-light text-[#F1E7DB]">Verified Mentor Endorsements</h4>
+                        <h4 className="text-lg font-light text-[#F5F0E5]">Verified Mentor Endorsements</h4>
                       </div>
 
                       <div className="space-y-3">
                         {activeView?.mentor_feedback?.endorsements?.map((fb: any, idx: number) => (
-                          <div key={idx} className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 space-y-2">
+                          <div key={idx} className="p-4 rounded-lg bg-[#1B231E] border border-[#344236] space-y-2">
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <h5 className="text-sm font-medium text-[#F1E7DB]">{fb.mentor_name}</h5>
-                                <span className="text-xs text-[#D8C2A6] font-mono block">{fb.mentor_title}</span>
+                                <h5 className="text-sm font-medium text-[#F5F0E5]">{fb.mentor_name}</h5>
+                                <span className="text-xs text-[#B6C899] font-mono block">{fb.mentor_title}</span>
                               </div>
                               {renderVerificationBadge(fb.verification_level)}
                             </div>
-                            <p className="text-xs italic text-[#D8C2A6]/90 font-sans leading-relaxed">
+                            <p className="text-xs italic text-[#B6C899]/90 font-sans leading-relaxed">
                               &ldquo;{fb.endorsement_text}&rdquo;
                             </p>
-                            <div className="text-[10px] font-mono text-[#9A9A9A] pt-1">
+                            <div className="text-[10px] font-mono text-[#AAB9A9] pt-1">
                               Verified Session: {fb.session_date}
                             </div>
                           </div>
@@ -858,47 +858,47 @@ export function CareerPassportModal({
                     </section>
 
                     {/* SECTION 11: CAREER PREFERENCES */}
-                    <section className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                    <section className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 11 // CAREER PREFERENCES
                         </span>
-                        <h4 className="text-lg font-light text-[#F1E7DB]">Target Working Parameters</h4>
+                        <h4 className="text-lg font-light text-[#F5F0E5]">Target Working Parameters</h4>
                       </div>
 
-                      <div className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 space-y-3 font-mono text-xs">
-                        <div className="flex items-center justify-between pb-2 border-b border-[#D8C2A6]/10">
-                          <span className="text-[#9A9A9A] uppercase">PREFERRED WORK MODE</span>
-                          <span className="text-[#F1E7DB] capitalize">{activeView?.career_preferences?.preferred_work_mode}</span>
+                      <div className="p-4 rounded-lg bg-[#1B231E] border border-[#344236] space-y-3 font-mono text-xs">
+                        <div className="flex items-center justify-between pb-2 border-b border-[#344236]/60">
+                          <span className="text-[#AAB9A9] uppercase">PREFERRED WORK MODE</span>
+                          <span className="text-[#F5F0E5] capitalize">{activeView?.career_preferences?.preferred_work_mode}</span>
                         </div>
-                        <div className="flex items-center justify-between pb-2 border-b border-[#D8C2A6]/10">
-                          <span className="text-[#9A9A9A] uppercase">WEEKLY AVAILABILITY</span>
-                          <span className="text-[#F1E7DB]">{activeView?.career_preferences?.available_hours_per_week} Hours / Week</span>
+                        <div className="flex items-center justify-between pb-2 border-b border-[#344236]/60">
+                          <span className="text-[#AAB9A9] uppercase">WEEKLY AVAILABILITY</span>
+                          <span className="text-[#F5F0E5]">{activeView?.career_preferences?.available_hours_per_week} Hours / Week</span>
                         </div>
-                        <div className="flex items-center justify-between pb-2 border-b border-[#D8C2A6]/10">
-                          <span className="text-[#9A9A9A] uppercase">PREFERRED LOCATION</span>
-                          <span className="text-[#F1E7DB]">{activeView?.career_preferences?.preferred_location}</span>
+                        <div className="flex items-center justify-between pb-2 border-b border-[#344236]/60">
+                          <span className="text-[#AAB9A9] uppercase">PREFERRED LOCATION</span>
+                          <span className="text-[#F5F0E5]">{activeView?.career_preferences?.preferred_location}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-[#9A9A9A] uppercase">COMPENSATION EXPECTATION</span>
-                          <span className="text-[#D8C2A6]">{activeView?.career_preferences?.compensation_expectation}</span>
+                          <span className="text-[#AAB9A9] uppercase">COMPENSATION EXPECTATION</span>
+                          <span className="text-[#B6C899]">{activeView?.career_preferences?.compensation_expectation}</span>
                         </div>
                       </div>
                     </section>
                   </div>
 
                   {/* 12. CANDIDATE-CONTROLLED SHARING SUMMARY */}
-                  <section className="p-6 sm:p-8 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                  <section className="p-6 sm:p-8 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#A56F7C] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#536B58] block mb-1">
                           SECTION 12 // CANDIDATE-CONTROLLED SHARING
                         </span>
-                        <h4 className="text-lg font-light text-[#F1E7DB]">Cryptographic Access State</h4>
+                        <h4 className="text-lg font-light text-[#F5F0E5]">Cryptographic Access State</h4>
                       </div>
                       <button
                         onClick={() => setActiveTab("grants")}
-                        className="px-3 py-1.5 rounded-lg bg-[#111111] border border-[#D8C2A6]/25 text-[#D8C2A6] hover:text-[#F1E7DB] text-xs font-mono uppercase tracking-wider flex items-center gap-1.5 self-start"
+                        className="px-3 py-1.5 rounded-lg bg-[#1B231E] border border-[#344236] text-[#B6C899] hover:text-[#F5F0E5] text-xs font-mono uppercase tracking-wider flex items-center gap-1.5 self-start"
                       >
                         <Share2 className="w-3 h-3" />
                         <span>Manage Employer Sharing</span>
@@ -906,27 +906,27 @@ export function CareerPassportModal({
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-                      <div className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15">
-                        <span className="text-[#9A9A9A] text-[10px] uppercase block">SHARING STATUS</span>
+                      <div className="p-4 rounded-lg bg-[#1B231E] border border-[#344236]">
+                        <span className="text-[#AAB9A9] text-[10px] uppercase block">SHARING STATUS</span>
                         <span className="text-emerald-400 font-semibold block mt-1">
                           {activeView?.candidate_controlled_sharing?.is_public_share_enabled ? "CANDIDATE AUTHORIZED" : "STRICTLY PRIVATE"}
                         </span>
                       </div>
-                      <div className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15">
-                        <span className="text-[#9A9A9A] text-[10px] uppercase block">ACTIVE EMPLOYER GRANTS</span>
-                        <span className="text-[#D8C2A6] font-semibold block mt-1">
+                      <div className="p-4 rounded-lg bg-[#1B231E] border border-[#344236]">
+                        <span className="text-[#AAB9A9] text-[10px] uppercase block">ACTIVE EMPLOYER GRANTS</span>
+                        <span className="text-[#B6C899] font-semibold block mt-1">
                           {activeView?.candidate_controlled_sharing?.active_employer_grants?.length || 0} Authorized Organizations
                         </span>
                       </div>
-                      <div className="p-4 rounded-lg bg-[#111111] border border-[#D8C2A6]/15">
-                        <span className="text-[#9A9A9A] text-[10px] uppercase block">ACCESS LOG AUDITING</span>
-                        <span className="text-[#F1E7DB] block mt-1">
+                      <div className="p-4 rounded-lg bg-[#1B231E] border border-[#344236]">
+                        <span className="text-[#AAB9A9] text-[10px] uppercase block">ACCESS LOG AUDITING</span>
+                        <span className="text-[#F5F0E5] block mt-1">
                           {accessLogs.length} Sensitive View Audits
                         </span>
                       </div>
                     </div>
 
-                    <p className="text-[11px] text-[#9A9A9A] font-mono border-t border-[#D8C2A6]/10 pt-3">
+                    <p className="text-[11px] text-[#AAB9A9] font-mono border-t border-[#344236]/60 pt-3">
                       {activeView?.compliance_disclaimer ||
                         "GFG Verified Career Passport 2.0 represents candidate-authorized professional qualifications, verified coursework, and assessed technical competencies. GFG does not issue government degrees directly."}
                     </p>
@@ -938,22 +938,22 @@ export function CareerPassportModal({
               {activeTab === "privacy" && (
                 <div className="max-w-4xl mx-auto space-y-8">
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#A56F7C] block mb-1">
+                    <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#536B58] block mb-1">
                       CANDIDATE DATA SOVEREIGNTY
                     </span>
-                    <h3 className="text-2xl font-light text-[#F1E7DB]">Career Break & Privacy Governance</h3>
-                    <p className="text-xs text-[#9A9A9A] font-mono mt-1">
+                    <h3 className="text-2xl font-light text-[#F5F0E5]">Career Break & Privacy Governance</h3>
+                    <p className="text-xs text-[#AAB9A9] font-mono mt-1">
                       You maintain complete autonomy over what prospective employers can inspect. Private by default.
                     </p>
                   </div>
 
                   {/* CAREER BREAK DISPLAY SELECTOR */}
-                  <div className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                  <div className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-[#A56F7C]" />
-                      <h4 className="text-base font-medium text-[#F1E7DB]">Career Break Display Mode</h4>
+                      <Clock className="w-5 h-5 text-[#536B58]" />
+                      <h4 className="text-base font-medium text-[#F5F0E5]">Career Break Display Mode</h4>
                     </div>
-                    <p className="text-xs text-[#D8C2A6]/90 font-mono leading-relaxed">
+                    <p className="text-xs text-[#B6C899]/90 font-mono leading-relaxed">
                       Choose how your sabbatical or caregiving pause is represented on your timeline when prospective employers view your passport:
                     </p>
 
@@ -964,15 +964,15 @@ export function CareerPassportModal({
                         onClick={() => setBreakMode("full")}
                         className={`p-4 rounded-xl border text-left transition-all ${
                           breakMode === "full"
-                            ? "bg-[#A56F7C]/20 border-[#A56F7C] text-[#F1E7DB] shadow-sm"
-                            : "bg-[#111111] border-[#D8C2A6]/15 text-[#9A9A9A] hover:border-[#D8C2A6]/35"
+                            ? "bg-[#536B58]/20 border-[#536B58] text-[#F5F0E5] shadow-sm"
+                            : "bg-[#1B231E] border-[#344236] text-[#AAB9A9] hover:border-[#B6C899]/60"
                         }`}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-mono uppercase tracking-wider font-semibold text-[#D8C2A6]">
+                          <span className="text-xs font-mono uppercase tracking-wider font-semibold text-[#B6C899]">
                             Show Dates & Reason
                           </span>
-                          {breakMode === "full" && <Check className="w-4 h-4 text-[#A56F7C]" />}
+                          {breakMode === "full" && <Check className="w-4 h-4 text-[#536B58]" />}
                         </div>
                         <p className="text-[11px] font-sans leading-relaxed">
                           Displays your break timeframe and candidate-provided context (e.g., &ldquo;Parenting & Childcare&rdquo;).
@@ -985,15 +985,15 @@ export function CareerPassportModal({
                         onClick={() => setBreakMode("dates_only")}
                         className={`p-4 rounded-xl border text-left transition-all ${
                           breakMode === "dates_only"
-                            ? "bg-[#D8C2A6]/20 border-[#D8C2A6] text-[#F1E7DB] shadow-sm"
-                            : "bg-[#111111] border-[#D8C2A6]/15 text-[#9A9A9A] hover:border-[#D8C2A6]/35"
+                            ? "bg-[#B6C899]/20 border-[#B6C899] text-[#F5F0E5] shadow-sm"
+                            : "bg-[#1B231E] border-[#344236] text-[#AAB9A9] hover:border-[#B6C899]/60"
                         }`}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-mono uppercase tracking-wider font-semibold text-[#D8C2A6]">
+                          <span className="text-xs font-mono uppercase tracking-wider font-semibold text-[#B6C899]">
                             Dates Only (Recommended)
                           </span>
-                          {breakMode === "dates_only" && <Check className="w-4 h-4 text-[#D8C2A6]" />}
+                          {breakMode === "dates_only" && <Check className="w-4 h-4 text-[#B6C899]" />}
                         </div>
                         <p className="text-[11px] font-sans leading-relaxed">
                           Displays the duration timeframe only with neutral continuity indicator (&ldquo;Career Sabbatical&rdquo;).
@@ -1006,8 +1006,8 @@ export function CareerPassportModal({
                         onClick={() => setBreakMode("hidden")}
                         className={`p-4 rounded-xl border text-left transition-all ${
                           breakMode === "hidden"
-                            ? "bg-purple-950/40 border-purple-400 text-[#F1E7DB] shadow-sm"
-                            : "bg-[#111111] border-[#D8C2A6]/15 text-[#9A9A9A] hover:border-[#D8C2A6]/35"
+                            ? "bg-purple-950/40 border-purple-400 text-[#F5F0E5] shadow-sm"
+                            : "bg-[#1B231E] border-[#344236] text-[#AAB9A9] hover:border-[#B6C899]/60"
                         }`}
                       >
                         <div className="flex items-center justify-between mb-2">
@@ -1024,9 +1024,9 @@ export function CareerPassportModal({
                   </div>
 
                   {/* GRANULAR PRIVACY TOGGLES */}
-                  <div className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
-                    <h4 className="text-base font-medium text-[#F1E7DB]">Granular Employer Visibility Toggles</h4>
-                    <p className="text-xs text-[#9A9A9A] font-mono">
+                  <div className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
+                    <h4 className="text-base font-medium text-[#F5F0E5]">Granular Employer Visibility Toggles</h4>
+                    <p className="text-xs text-[#AAB9A9] font-mono">
                       Enable or disable individual sections before generating shareable links or downloading PDFs:
                     </p>
 
@@ -1041,11 +1041,11 @@ export function CareerPassportModal({
                       ].map((item) => (
                         <div
                           key={item.key}
-                          className="p-3.5 rounded-lg bg-[#111111] border border-[#D8C2A6]/15 flex items-start justify-between gap-3"
+                          className="p-3.5 rounded-lg bg-[#1B231E] border border-[#344236] flex items-start justify-between gap-3"
                         >
                           <div>
-                            <span className="text-xs font-mono font-medium text-[#F1E7DB] block">{item.label}</span>
-                            <span className="text-[11px] text-[#9A9A9A]">{item.desc}</span>
+                            <span className="text-xs font-mono font-medium text-[#F5F0E5] block">{item.label}</span>
+                            <span className="text-[11px] text-[#AAB9A9]">{item.desc}</span>
                           </div>
                           <input
                             type="checkbox"
@@ -1056,7 +1056,7 @@ export function CareerPassportModal({
                                 [item.key]: e.target.checked,
                               }))
                             }
-                            className="w-4 h-4 mt-1 accent-[#A56F7C] cursor-pointer shrink-0"
+                            className="w-4 h-4 mt-1 accent-[#536B58] cursor-pointer shrink-0"
                           />
                         </div>
                       ))}
@@ -1065,13 +1065,13 @@ export function CareerPassportModal({
 
                   {/* SAVE ACTION */}
                   <div className="flex items-center justify-between pt-4">
-                    <p className="text-xs font-mono text-[#9A9A9A]">
+                    <p className="text-xs font-mono text-[#AAB9A9]">
                       Changes update immediately for all active employer share links and PDF exports.
                     </p>
                     <button
                       onClick={handleSavePrivacy}
                       disabled={isSaving}
-                      className="px-6 py-2.5 rounded-lg bg-[#F1E7DB] text-[#111111] hover:bg-white text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center gap-2 shadow"
+                      className="px-6 py-2.5 rounded-lg bg-[#F5F0E5] text-[#1B231E] hover:bg-white text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center gap-2 shadow"
                     >
                       {isSaving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                       <span>Save Privacy Settings</span>
@@ -1084,25 +1084,25 @@ export function CareerPassportModal({
               {activeTab === "grants" && (
                 <div className="max-w-4xl mx-auto space-y-8">
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#A56F7C] block mb-1">
+                    <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#536B58] block mb-1">
                       SECURITY & GOVERNANCE
                     </span>
-                    <h3 className="text-2xl font-light text-[#F1E7DB]">Employer Access Grants & Revocation</h3>
-                    <p className="text-xs text-[#9A9A9A] font-mono mt-1">
+                    <h3 className="text-2xl font-light text-[#F5F0E5]">Employer Access Grants & Revocation</h3>
+                    <p className="text-xs text-[#AAB9A9] font-mono mt-1">
                       Grant temporary, revocable access tokens to specific recruiters. You can revoke access anytime with one click.
                     </p>
                   </div>
 
                   {/* CREATE NEW GRANT FORM */}
-                  <div className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                  <div className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                     <div className="flex items-center gap-2">
-                      <Share2 className="w-5 h-5 text-[#D8C2A6]" />
-                      <h4 className="text-base font-medium text-[#F1E7DB]">Authorize New Hiring Partner</h4>
+                      <Share2 className="w-5 h-5 text-[#B6C899]" />
+                      <h4 className="text-base font-medium text-[#F5F0E5]">Authorize New Hiring Partner</h4>
                     </div>
 
                     <form onSubmit={handleCreateGrant} className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="text-[10px] font-mono uppercase text-[#9A9A9A] block mb-1">
+                        <label className="text-[10px] font-mono uppercase text-[#AAB9A9] block mb-1">
                           RECRUITER / HIRING EMAIL *
                         </label>
                         <input
@@ -1111,12 +1111,12 @@ export function CareerPassportModal({
                           value={grantEmail}
                           onChange={(e) => setGrantEmail(e.target.value)}
                           placeholder="talent@company.com"
-                          className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#D8C2A6]/20 text-xs font-mono text-[#F1E7DB] focus:outline-none focus:border-[#D8C2A6]"
+                          className="w-full px-3 py-2 rounded-lg bg-[#1B231E] border border-[#344236] text-xs font-mono text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                         />
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-mono uppercase text-[#9A9A9A] block mb-1">
+                        <label className="text-[10px] font-mono uppercase text-[#AAB9A9] block mb-1">
                           ORGANIZATION / COMPANY
                         </label>
                         <input
@@ -1124,18 +1124,18 @@ export function CareerPassportModal({
                           value={grantOrg}
                           onChange={(e) => setGrantOrg(e.target.value)}
                           placeholder="e.g. Razorpay, Nova Tech"
-                          className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#D8C2A6]/20 text-xs font-mono text-[#F1E7DB] focus:outline-none focus:border-[#D8C2A6]"
+                          className="w-full px-3 py-2 rounded-lg bg-[#1B231E] border border-[#344236] text-xs font-mono text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                         />
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-mono uppercase text-[#9A9A9A] block mb-1">
+                        <label className="text-[10px] font-mono uppercase text-[#AAB9A9] block mb-1">
                           VALIDITY DURATION
                         </label>
                         <select
                           value={grantDays}
                           onChange={(e) => setGrantDays(Number(e.target.value))}
-                          className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#D8C2A6]/20 text-xs font-mono text-[#F1E7DB] focus:outline-none focus:border-[#D8C2A6]"
+                          className="w-full px-3 py-2 rounded-lg bg-[#1B231E] border border-[#344236] text-xs font-mono text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                         >
                           <option value={7}>7 Days (Confidential)</option>
                           <option value={14}>14 Days (Standard Sprint)</option>
@@ -1148,7 +1148,7 @@ export function CareerPassportModal({
                         <button
                           type="submit"
                           disabled={isSaving}
-                          className="px-5 py-2 rounded-lg bg-[#D8C2A6] text-[#111111] hover:bg-[#F1E7DB] text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center gap-2"
+                          className="px-5 py-2 rounded-lg bg-[#B6C899] text-[#1B231E] hover:bg-[#F5F0E5] text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center gap-2"
                         >
                           {isSaving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                           <span>Generate Time-Limited Access Grant</span>
@@ -1158,17 +1158,17 @@ export function CareerPassportModal({
                   </div>
 
                   {/* ACTIVE GRANTS TABLE */}
-                  <div className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
-                    <h4 className="text-base font-medium text-[#F1E7DB]">Active Access Grants</h4>
+                  <div className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
+                    <h4 className="text-base font-medium text-[#F5F0E5]">Active Access Grants</h4>
 
                     {activeView?.candidate_controlled_sharing?.active_employer_grants?.length === 0 ? (
-                      <p className="text-xs font-mono text-[#9A9A9A] py-4 text-center">
+                      <p className="text-xs font-mono text-[#AAB9A9] py-4 text-center">
                         No active employer grants. Your passport is completely private.
                       </p>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-left font-mono text-xs">
-                          <thead className="border-b border-[#D8C2A6]/15 text-[10px] text-[#9A9A9A] uppercase">
+                          <thead className="border-b border-[#344236] text-[10px] text-[#AAB9A9] uppercase">
                             <tr>
                               <th className="pb-2.5">RECIPIENT</th>
                               <th className="pb-2.5">ORGANIZATION</th>
@@ -1177,12 +1177,12 @@ export function CareerPassportModal({
                               <th className="pb-2.5 text-right">ACTION</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-[#D8C2A6]/10">
+                          <tbody className="divide-y divide-[#B6C899]/10">
                             {activeView?.candidate_controlled_sharing?.active_employer_grants?.map((g: any) => (
                               <tr key={g.id} className="hover:bg-white/[0.02]">
-                                <td className="py-3 text-[#F1E7DB]">{g.grantee_email}</td>
-                                <td className="py-3 text-[#D8C2A6]">{g.grantee_organization || "Independent Recruiter"}</td>
-                                <td className="py-3 text-[#9A9A9A]">
+                                <td className="py-3 text-[#F5F0E5]">{g.grantee_email}</td>
+                                <td className="py-3 text-[#B6C899]">{g.grantee_organization || "Independent Recruiter"}</td>
+                                <td className="py-3 text-[#AAB9A9]">
                                   {g.expires_at ? new Date(g.expires_at).toLocaleDateString() : "Never"}
                                 </td>
                                 <td className="py-3">
@@ -1208,12 +1208,12 @@ export function CareerPassportModal({
                   </div>
 
                   {/* SENSITIVE VIEW AUDIT LOGS */}
-                  <div className="p-6 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-4">
+                  <div className="p-6 rounded-xl bg-[#111714] border border-[#344236] space-y-4">
                     <div className="flex items-center gap-2">
                       <Shield className="w-5 h-5 text-emerald-400" />
-                      <h4 className="text-base font-medium text-[#F1E7DB]">Sensitive View Access Logs</h4>
+                      <h4 className="text-base font-medium text-[#F5F0E5]">Sensitive View Access Logs</h4>
                     </div>
-                    <p className="text-xs text-[#9A9A9A] font-mono">
+                    <p className="text-xs text-[#AAB9A9] font-mono">
                       Every employer interaction with your Career Passport is audited and timestamped.
                     </p>
 
@@ -1221,17 +1221,17 @@ export function CareerPassportModal({
                       {accessLogs.map((log: any, idx: number) => (
                         <div
                           key={log.id || idx}
-                          className="p-3 rounded-lg bg-[#111111] border border-[#D8C2A6]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono text-xs"
+                          className="p-3 rounded-lg bg-[#1B231E] border border-[#344236]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono text-xs"
                         >
                           <div>
-                            <span className="text-[#F1E7DB] font-medium block">
+                            <span className="text-[#F5F0E5] font-medium block">
                               {log.viewer_identity} ({log.viewer_role})
                             </span>
-                            <span className="text-[10px] text-[#9A9A9A]">
+                            <span className="text-[10px] text-[#AAB9A9]">
                               Sections inspected: {log.sections_viewed?.join(", ") || "Summary Profile"}
                             </span>
                           </div>
-                          <span className="text-[10px] text-[#D8C2A6] shrink-0">
+                          <span className="text-[10px] text-[#B6C899] shrink-0">
                             {new Date(log.viewed_at).toLocaleString()}
                           </span>
                         </div>
@@ -1245,23 +1245,23 @@ export function CareerPassportModal({
               {activeTab === "evidence" && (
                 <div className="max-w-3xl mx-auto space-y-8">
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#A56F7C] block mb-1">
+                    <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#536B58] block mb-1">
                       VERIFICATION WORKFLOW
                     </span>
-                    <h3 className="text-2xl font-light text-[#F1E7DB]">Submit Evidence for Verification</h3>
-                    <p className="text-xs text-[#9A9A9A] font-mono mt-1">
+                    <h3 className="text-2xl font-light text-[#F5F0E5]">Submit Evidence for Verification</h3>
+                    <p className="text-xs text-[#AAB9A9] font-mono mt-1">
                       Upload employment letters, course completion certificates, project repositories, or assessment records.
                     </p>
                   </div>
 
                   {/* Anti-misleading rule callout */}
-                  <div className="p-4 rounded-xl bg-[#1d1618] border border-[#A56F7C]/40 flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-[#A56F7C] shrink-0 mt-0.5" />
+                  <div className="p-4 rounded-xl bg-[#1B231E] border border-[#536B58]/40 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-[#536B58] shrink-0 mt-0.5" />
                     <div>
-                      <span className="text-xs font-mono uppercase tracking-wider text-[#F1E7DB] block font-semibold">
+                      <span className="text-xs font-mono uppercase tracking-wider text-[#F5F0E5] block font-semibold">
                         Verification Integrity Standard
                       </span>
-                      <p className="text-xs text-[#D8C2A6] mt-0.5 font-mono leading-relaxed">
+                      <p className="text-xs text-[#B6C899] mt-0.5 font-mono leading-relaxed">
                         Do not call uploaded documents verified simply because they exist.
                         All submissions start as &ldquo;Document Submitted, Pending Review&rdquo;. 
                         Authorized human or institutional reviewers audit evidence before granting &ldquo;Independently Verified&rdquo; status. 
@@ -1270,15 +1270,15 @@ export function CareerPassportModal({
                     </div>
                   </div>
 
-                  <form onSubmit={handleSubmitEvidence} className="p-6 sm:p-8 rounded-xl bg-[#161616] border border-[#D8C2A6]/20 space-y-5">
+                  <form onSubmit={handleSubmitEvidence} className="p-6 sm:p-8 rounded-xl bg-[#111714] border border-[#344236] space-y-5">
                     <div>
-                      <label className="text-[10px] font-mono uppercase text-[#9A9A9A] block mb-1.5">
+                      <label className="text-[10px] font-mono uppercase text-[#AAB9A9] block mb-1.5">
                         EVIDENCE CATEGORY *
                       </label>
                       <select
                         value={evidenceType}
                         onChange={(e) => setEvidenceType(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#D8C2A6]/20 text-xs font-mono text-[#F1E7DB] focus:outline-none focus:border-[#D8C2A6]"
+                        className="w-full px-3 py-2 rounded-lg bg-[#1B231E] border border-[#344236] text-xs font-mono text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                       >
                         <option value="employment_letter">Previous Employment Letter / Relieving Letter</option>
                         <option value="certificate">Course / Technical Certificate</option>
@@ -1288,7 +1288,7 @@ export function CareerPassportModal({
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-mono uppercase text-[#9A9A9A] block mb-1.5">
+                      <label className="text-[10px] font-mono uppercase text-[#AAB9A9] block mb-1.5">
                         CREDENTIAL / ROLE TITLE *
                       </label>
                       <input
@@ -1297,12 +1297,12 @@ export function CareerPassportModal({
                         value={evidenceTitle}
                         onChange={(e) => setEvidenceTitle(e.target.value)}
                         placeholder="e.g. Senior Data Engineer OR AWS Certified Data Analytics"
-                        className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#D8C2A6]/20 text-xs font-mono text-[#F1E7DB] focus:outline-none focus:border-[#D8C2A6]"
+                        className="w-full px-3 py-2 rounded-lg bg-[#1B231E] border border-[#344236] text-xs font-mono text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-mono uppercase text-[#9A9A9A] block mb-1.5">
+                      <label className="text-[10px] font-mono uppercase text-[#AAB9A9] block mb-1.5">
                         ISSUING EMPLOYER / INSTITUTION *
                       </label>
                       <input
@@ -1311,12 +1311,12 @@ export function CareerPassportModal({
                         value={evidenceIssuer}
                         onChange={(e) => setEvidenceIssuer(e.target.value)}
                         placeholder="e.g. Apex Global Labs OR Oracle Academy"
-                        className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#D8C2A6]/20 text-xs font-mono text-[#F1E7DB] focus:outline-none focus:border-[#D8C2A6]"
+                        className="w-full px-3 py-2 rounded-lg bg-[#1B231E] border border-[#344236] text-xs font-mono text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-mono uppercase text-[#9A9A9A] block mb-1.5">
+                      <label className="text-[10px] font-mono uppercase text-[#AAB9A9] block mb-1.5">
                         VERIFICATION SOURCE / REFERENCE LINK
                       </label>
                       <input
@@ -1324,12 +1324,12 @@ export function CareerPassportModal({
                         value={evidenceSource}
                         onChange={(e) => setEvidenceSource(e.target.value)}
                         placeholder="e.g. https://github.com/candidate/capstone OR Certificate ID #88921"
-                        className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#D8C2A6]/20 text-xs font-mono text-[#F1E7DB] focus:outline-none focus:border-[#D8C2A6]"
+                        className="w-full px-3 py-2 rounded-lg bg-[#1B231E] border border-[#344236] text-xs font-mono text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-mono uppercase text-[#9A9A9A] block mb-1.5">
+                      <label className="text-[10px] font-mono uppercase text-[#AAB9A9] block mb-1.5">
                         CONFIDENTIAL AUDIT NOTES (OPTIONAL)
                       </label>
                       <textarea
@@ -1337,7 +1337,7 @@ export function CareerPassportModal({
                         value={evidenceNotes}
                         onChange={(e) => setEvidenceNotes(e.target.value)}
                         placeholder="Provide any relevant context for the human reviewer..."
-                        className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#D8C2A6]/20 text-xs font-mono text-[#F1E7DB] focus:outline-none focus:border-[#D8C2A6]"
+                        className="w-full px-3 py-2 rounded-lg bg-[#1B231E] border border-[#344236] text-xs font-mono text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                       />
                     </div>
 
@@ -1345,7 +1345,7 @@ export function CareerPassportModal({
                       <button
                         type="submit"
                         disabled={isSaving}
-                        className="px-6 py-2.5 rounded-lg bg-[#F1E7DB] text-[#111111] hover:bg-white text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center gap-2 shadow"
+                        className="px-6 py-2.5 rounded-lg bg-[#F5F0E5] text-[#1B231E] hover:bg-white text-xs font-mono uppercase tracking-wider font-semibold transition-all flex items-center gap-2 shadow"
                       >
                         {isSaving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                         <span>Submit for Verification Review</span>
@@ -1359,19 +1359,19 @@ export function CareerPassportModal({
         </div>
 
         {/* FOOTER BAR */}
-        <div className="p-4 sm:p-5 border-t border-[#D8C2A6]/15 bg-[#181818] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono text-[#9A9A9A] shrink-0">
+        <div className="p-4 sm:p-5 border-t border-[#344236] bg-[#111714] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono text-[#AAB9A9] shrink-0">
           <div className="flex items-center gap-2">
             <Shield className="w-3.5 h-3.5 text-emerald-400" />
             <span>CRYPTOGRAPHICALLY AUDITED BY GFG VERIFIED CAREER PROTOCOL 2.0</span>
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="text-[#D8C2A6]">
+            <span className="text-[#B6C899]">
               STATUS: {activeView?.candidate_controlled_sharing?.is_public_share_enabled ? "CANDIDATE AUTHORIZED" : "PRIVATE BY DEFAULT"}
             </span>
             <button
               onClick={handleDownloadPdf}
-              className="text-[#F1E7DB] hover:text-[#D8C2A6] underline transition-colors"
+              className="text-[#F5F0E5] hover:text-[#B6C899] underline transition-colors"
             >
               Export PDF
             </button>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Cormorant_Garamond } from "next/font/google";
+import { Inter, Cormorant_Garamond, Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { AccessibilityProvider } from "@/lib/accessibility/AccessibilityContext";
@@ -14,15 +14,29 @@ const sansFont = Inter({
 const serifFont = Cormorant_Garamond({
   variable: "--font-serif",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   display: "swap",
 });
 
+const displayFont = Manrope({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const monoFont = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "GFG — Inclusive Career Continuity & Return-to-Work Platform | Return. Rebuild. Rise.",
+  title: "GAP FOR GOOD (GFG 3.0) — Noir Bloom | Not a restart. A return to possibility.",
   description:
-    "An inclusive, accessible editorial career platform designed to help women rebuild skills, regain confidence, find flexible work, or launch sustainable businesses without stigma.",
+    "Gothic Editorial × Midnight & Sage digital platform empowering women to rebuild skills, regain career confidence, explore entrepreneurship, and bridge to verified opportunities.",
 };
 
 export default function RootLayout({
@@ -33,9 +47,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sansFont.variable} ${serifFont.variable} h-full antialiased scroll-smooth`}
+      className={`${sansFont.variable} ${serifFont.variable} ${displayFont.variable} ${monoFont.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="min-h-full flex flex-col bg-[#111111] text-[#F1E7DB] font-sans selection:bg-[#A56F7C] selection:text-[#F1E7DB]">
+      <body className="min-h-full flex flex-col bg-[#0B0F0D] text-[#F5F0E5] font-sans selection:bg-[#536B58] selection:text-[#F5F0E5]">
         <LanguageProvider>
           <AccessibilityProvider>
             <BandwidthProvider>

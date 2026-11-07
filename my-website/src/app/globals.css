@@ -2,65 +2,76 @@
 @import "tw-animate-css";
 
 @theme inline {
-  --color-bg-primary: #111714;
-  --color-bg-secondary: #1B231E;
-  --color-bg-surface: #202A23;
+  /* ==========================================================================
+     GFG 3.0: NOIR BLOOM DESIGN TOKENS
+     Gothic Editorial × Midnight & Sage × Cinematic Minimalism × Human Luxury
+     70% Dark Neutrals | 20% Ivory & Surfaces | 8% Sage Green | 2% Champagne
+     ========================================================================== */
+  --color-obsidian-black: #0B0F0D;
+  --color-midnight-forest: #111714;
+  --color-deep-moss: #1B231E;
+  --color-elevated-panel: #202A23;
+  --color-sage-green: #B6C899;
+  --color-forest-green: #536B58;
+  --color-warm-ivory: #F5F0E5;
+  --color-muted-silver: #AAB9A9;
+  --color-champagne-gold: #C6AC7D;
+  --color-noir-border: #344236;
+
+  /* Semantic Theme Mappings */
+  --color-bg-primary: #0B0F0D;
+  --color-bg-secondary: #111714;
+  --color-bg-surface: #1B231E;
+  --color-bg-elevated: #202A23;
   --color-sage-accent: #B6C899;
-  --color-muted-green: #697D69;
+  --color-muted-green: #536B58;
   --color-warm-ivory: #F5F0E5;
   --color-sage-mist: #AAB9A9;
   --color-forest-border: #344236;
 
-  --color-beige-soft: #B6C899;
-  --color-rose-muted: #697D69;
-  --color-cream-warm: #F5F0E5;
-  --color-gray-muted: #AAB9A9;
-  --color-burgundy-deep: #1B231E;
-  --color-pink-soft: #B6C899;
-
-  --color-espresso: #111714;
-  --color-cocoa: #1B231E;
-  --color-terracotta: #697D69;
-  --color-champagne: #B6C899;
-  --color-ivory: #F5F0E5;
-
-  --color-background: #111714;
+  --color-background: #0B0F0D;
   --color-foreground: #F5F0E5;
-  --color-card: rgba(27, 35, 30, 0.92);
+  --color-card: rgba(17, 23, 20, 0.94);
   --color-card-foreground: #F5F0E5;
   --color-primary: #B6C899;
-  --color-primary-foreground: #111714;
-  --color-secondary: #697D69;
+  --color-primary-foreground: #0B0F0D;
+  --color-secondary: #536B58;
   --color-secondary-foreground: #F5F0E5;
   --color-muted: rgba(182, 200, 153, 0.08);
   --color-muted-foreground: #AAB9A9;
   --color-accent: #B6C899;
-  --color-accent-foreground: #111714;
+  --color-accent-foreground: #0B0F0D;
+  --color-champagne: #C6AC7D;
   --color-border: #344236;
 
-  --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Typography Stacks */
+  --font-sans: var(--font-sans), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: var(--font-serif), Cormorant Garamond, Georgia, serif;
+  --font-display: var(--font-display), Manrope, sans-serif;
+  --font-mono: var(--font-mono), JetBrains Mono, monospace;
 }
 
 :root {
-  --bg-primary: #111714;
-  --bg-secondary: #1B231E;
-  --bg-elevated: #202A23;
+  --obsidian-black: #0B0F0D;
+  --midnight-forest: #111714;
+  --deep-moss: #1B231E;
+  --elevated-panel: #202A23;
+  --sage-green: #B6C899;
+  --forest-green: #536B58;
+  --warm-ivory: #F5F0E5;
+  --muted-silver: #AAB9A9;
+  --champagne-gold: #C6AC7D;
+  --noir-border: #344236;
+
+  /* Aliases */
+  --bg-primary: #0B0F0D;
+  --bg-secondary: #111714;
+  --bg-elevated: #1B231E;
   --accent-sage: #B6C899;
-  --muted-green: #697D69;
+  --muted-green: #536B58;
   --warm-ivory: #F5F0E5;
   --secondary-text: #AAB9A9;
   --border-subdued: #344236;
-
-  --color-espresso: #111714;
-  --color-cocoa: #1B231E;
-  --color-terracotta: #697D69;
-  --color-champagne: #B6C899;
-  --color-ivory: #F5F0E5;
-  --color-beige: #B6C899;
-  --color-rose: #697D69;
-  --color-cream: #F5F0E5;
-  --color-gray: #AAB9A9;
 }
 
 @layer base {
@@ -69,7 +80,7 @@
   }
 
   body {
-    background-color: #111714;
+    background-color: #0B0F0D;
     color: #F5F0E5;
     font-family: var(--font-sans), sans-serif;
     text-rendering: optimizeLegibility;
@@ -88,6 +99,156 @@
     letter-spacing: -0.025em;
     font-weight: 500;
   }
+}
+
+/* ============================================================================
+   NOIR BLOOM CORE UTILITIES & COMPONENT FOUNDATIONS
+   ============================================================================ */
+
+.font-serif {
+  font-family: var(--font-serif), Cormorant Garamond, Georgia, serif;
+}
+
+.font-display {
+  font-family: var(--font-display), Manrope, sans-serif;
+}
+
+.font-sans {
+  font-family: var(--font-sans), Inter, sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), JetBrains Mono, monospace;
+}
+
+.italic-sage {
+  font-family: var(--font-serif), Cormorant Garamond, serif;
+  font-style: italic;
+  color: #B6C899;
+}
+
+.italic-champagne {
+  font-family: var(--font-serif), Cormorant Garamond, serif;
+  font-style: italic;
+  color: #C6AC7D;
+}
+
+/* Noir Bloom Button Primitives */
+.btn-noir-primary {
+  background-color: #B6C899;
+  color: #0B0F0D;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 0 4px 18px rgba(182, 200, 153, 0.22);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  border: 1px solid rgba(182, 200, 153, 0.8);
+}
+
+.btn-noir-primary:hover {
+  background-color: #c5d4ac;
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.5), 0 8px 24px rgba(182, 200, 153, 0.35);
+}
+
+.btn-noir-secondary {
+  background-color: rgba(27, 35, 30, 0.6);
+  color: #F5F0E5;
+  border: 1px solid #344236;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 12px 28px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.btn-noir-secondary:hover {
+  background-color: rgba(32, 42, 35, 0.9);
+  border-color: #B6C899;
+  color: #F5F0E5;
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 0 rgba(182, 200, 153, 0.2), 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.btn-noir-champagne {
+  background: linear-gradient(135deg, #C6AC7D 0%, #a88d5e 100%);
+  color: #0B0F0D;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 10px 22px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 0 4px 16px rgba(198, 172, 125, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.btn-noir-champagne:hover {
+  background: linear-gradient(135deg, #d4bb8e 0%, #b59b6c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(198, 172, 125, 0.35);
+}
+
+/* Noir Bloom Surfaces & Bento Containers */
+.noir-card {
+  background-color: #111714;
+  border: 1px solid #344236;
+  border-radius: 1.25rem;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 12px 36px -10px rgba(0, 0, 0, 0.6);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.noir-card:hover {
+  border-color: rgba(182, 200, 153, 0.35);
+  box-shadow: inset 0 1px 0 0 rgba(182, 200, 153, 0.1), 0 16px 44px -8px rgba(0, 0, 0, 0.7);
+}
+
+.noir-card-moss {
+  background-color: #1B231E;
+  border: 1px solid #344236;
+  border-radius: 1.25rem;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.noir-glass {
+  background-color: rgba(17, 23, 20, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(52, 66, 54, 0.7);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+.specular-border {
+  box-shadow: inset 0 1px 0 0 rgba(198, 172, 125, 0.2), 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+}
+
+.botanical-glow {
+  box-shadow: 0 0 45px -10px rgba(182, 200, 153, 0.15);
 }
 
 /* Reduced Motion Support (prefers-reduced-motion) */

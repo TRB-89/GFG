@@ -75,25 +75,25 @@ export function LearningHubShowcase({ onOpenLearningHub }: LearningHubShowcasePr
     <section
       id="learning-showcase"
       ref={ref}
-      className="relative min-h-screen w-full flex flex-col justify-center py-28 px-6 sm:px-12 md:px-16 lg:px-20 z-10 border-t border-orange-500/15 overflow-hidden"
+      className="relative min-h-screen w-full flex flex-col justify-center py-28 px-6 sm:px-12 md:px-16 lg:px-20 z-10 border-t border-[#344236] bg-[#0B0F0D] overflow-hidden"
     >
       {/* Background ambient lighting */}
-      <div className="absolute top-1/3 left-1/3 w-[650px] h-[650px] bg-orange-500/08 rounded-full blur-[180px] pointer-events-none" />
+      <div className="absolute top-1/3 left-1/3 w-[650px] h-[650px] bg-[#536B58]/08 rounded-full blur-[180px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto w-full space-y-16">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-orange-500/15 pb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#344236] pb-8">
           <div className="space-y-4 max-w-2xl">
             <div className="flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-orange-500" />
-              <span className="text-[11px] font-mono uppercase tracking-[0.26em] text-orange-400 font-semibold">
-                04 // GFG ACADEMY & CREDENTIAL SYSTEM
+              <span className="w-2 h-2 rounded-full bg-[#B6C899]" />
+              <span className="text-[11px] font-mono uppercase tracking-[0.26em] text-[#B6C899] font-medium">
+                04 // GFG ACADEMY &amp; CREDENTIAL SYSTEM
               </span>
             </div>
-            <h2 className="text-4xl sm:text-6xl font-light tracking-tight text-[#fcf8f2] leading-[1.04]">
-              GENUINE SKILLS.{" "}
-              <span className="text-gradient-amber italic font-serif">
-                AUTHENTIC CREDENTIALS.
+            <h2 className="text-4xl sm:text-6xl font-serif font-normal tracking-tight text-[#F5F0E5] leading-[1.04]">
+              Genuine skills.{" "}
+              <span className="italic text-[#B6C899] font-serif">
+                Authentic credentials.
               </span>
             </h2>
           </div>
@@ -101,7 +101,7 @@ export function LearningHubShowcase({ onOpenLearningHub }: LearningHubShowcasePr
           <button
             type="button"
             onClick={onOpenLearningHub}
-            className="btn-editorial-amber shrink-0"
+            className="px-6 py-3.5 rounded-full bg-[#B6C899] hover:bg-[#c8d8b0] text-[#0B0F0D] font-semibold text-xs tracking-wider uppercase transition-all shadow-[0_0_20px_rgba(182,200,153,0.3)] flex items-center gap-2 shrink-0"
           >
             <span>Open Learning Hub</span>
             <ArrowRight className="w-4 h-4" />
@@ -122,11 +122,11 @@ export function LearningHubShowcase({ onOpenLearningHub }: LearningHubShowcasePr
                     onClick={() => setSelectedCourseIdx(idx)}
                     className={`px-4 py-3 rounded-xl border text-left font-mono text-xs transition-all shrink-0 min-w-[200px] flex flex-col gap-1 ${
                       isActive
-                        ? "bg-[#1f150f] border-orange-500/60 text-[#fcf8f2] shadow-lg shadow-orange-950/40"
-                        : "bg-[#120d09]/70 border-white/5 text-[#9a8b7e] hover:border-orange-500/30 hover:text-[#fcf8f2]"
+                        ? "bg-[#1B231E] border-[#B6C899] text-[#F5F0E5] shadow-lg shadow-black/40"
+                        : "bg-[#111714] border-[#344236] text-[#AAB9A9] hover:border-[#B6C899]/40 hover:text-[#F5F0E5]"
                     }`}
                   >
-                    <span className={`text-[10px] ${isActive ? "text-orange-400 font-bold" : "text-[#7a6d62]"}`}>
+                    <span className={`text-[10px] ${isActive ? "text-[#B6C899] font-bold" : "text-[#536B58]"}`}>
                       {`COURSE 0${idx + 1} //`}
                     </span>
                     <span className="font-sans font-medium text-xs truncate">
@@ -138,42 +138,42 @@ export function LearningHubShowcase({ onOpenLearningHub }: LearningHubShowcasePr
             </div>
 
             {/* Selected Course Deep-Dive Card */}
-            <div className="card-editorial-glow rounded-3xl p-8 sm:p-10 space-y-6 flex-1 flex flex-col justify-between">
+            <div className="bg-[#111714] border border-[#344236] rounded-3xl p-8 sm:p-10 space-y-6 flex-1 flex flex-col justify-between shadow-xl">
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-mono tracking-wider bg-orange-500/15 border border-orange-500/30 text-orange-300 font-semibold">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono tracking-wider bg-[#1B231E] border border-[#344236] text-[#B6C899] font-medium">
                     {currentCourse.level}
                   </span>
-                  <span className="text-xs font-mono text-[#a8988a] flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-orange-400" />
+                  <span className="text-xs font-mono text-[#AAB9A9] flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-[#B6C899]" />
                     <span>{currentCourse.hours}</span>
                   </span>
-                  <span className="text-xs font-mono text-[#a8988a]">
+                  <span className="text-xs font-mono text-[#AAB9A9]">
                     {currentCourse.modules} Modules • {currentCourse.lessons} Deep Lessons
                   </span>
                 </div>
 
-                <h3 className="text-2xl sm:text-3xl font-serif text-[#fcf8f2] leading-tight">
+                <h3 className="text-2xl sm:text-3xl font-serif text-[#F5F0E5] leading-tight">
                   {currentCourse.title}
                 </h3>
 
-                <p className="text-sm sm:text-base text-[#bfaea0] leading-relaxed font-light">
+                <p className="text-sm sm:text-base text-[#AAB9A9] leading-relaxed font-light">
                   {currentCourse.desc}
                 </p>
               </div>
 
               {/* Skills Learned Badges */}
               <div className="space-y-3 pt-2">
-                <div className="text-[10px] font-mono uppercase tracking-widest text-orange-400/90 font-semibold">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-[#B6C899] font-medium">
                   Competencies You Will Master:
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {currentCourse.skills.map((skill, sIdx) => (
                     <span
                       key={sIdx}
-                      className="px-3 py-1 rounded-lg bg-[#19110b] border border-orange-500/20 text-xs text-[#e8dacb] font-mono flex items-center gap-1.5"
+                      className="px-3 py-1 rounded-lg bg-[#1B231E] border border-[#344236] text-xs text-[#F5F0E5] font-mono flex items-center gap-1.5"
                     >
-                      <CheckCircle2 className="w-3 h-3 text-orange-500" />
+                      <CheckCircle2 className="w-3 h-3 text-[#B6C899]" />
                       <span>{skill}</span>
                     </span>
                   ))}
@@ -181,19 +181,19 @@ export function LearningHubShowcase({ onOpenLearningHub }: LearningHubShowcasePr
               </div>
 
               {/* Practical Capstone Note */}
-              <div className="p-4 rounded-2xl bg-[#160f0a] border border-amber-500/20 flex items-center justify-between gap-4">
+              <div className="p-4 rounded-2xl bg-[#1B231E] border border-[#344236] flex items-center justify-between gap-4">
                 <div className="space-y-0.5">
-                  <div className="text-[10px] font-mono text-orange-400 uppercase tracking-wider font-semibold">
+                  <div className="text-[10px] font-mono text-[#B6C899] uppercase tracking-wider font-medium">
                     Required Capstone Project:
                   </div>
-                  <div className="text-xs text-[#fcf8f2] font-medium">
+                  <div className="text-xs text-[#F5F0E5] font-medium">
                     {currentCourse.practical}
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={onOpenLearningHub}
-                  className="px-4 py-2 rounded-xl bg-orange-500/15 hover:bg-orange-500 text-orange-300 hover:text-black border border-orange-500/30 text-xs font-mono font-semibold transition-all shrink-0"
+                  className="px-4 py-2 rounded-xl bg-[#B6C899]/15 hover:bg-[#B6C899] text-[#B6C899] hover:text-[#0B0F0D] border border-[#B6C899]/30 text-xs font-mono font-semibold transition-all shrink-0"
                 >
                   Start Course
                 </button>
@@ -203,60 +203,60 @@ export function LearningHubShowcase({ onOpenLearningHub }: LearningHubShowcasePr
 
           {/* RIGHT: High-End Certificate Preview Artifact */}
           <div className="lg:col-span-5 flex flex-col justify-center">
-            <div className="relative rounded-3xl p-1 bg-gradient-to-b from-amber-500/30 via-orange-500/15 to-amber-700/25 shadow-2xl shadow-orange-950/60 group">
+            <div className="relative rounded-3xl p-1 bg-gradient-to-b from-[#C6AC7D]/30 via-[#536B58]/20 to-[#1B231E]/40 shadow-2xl group">
               {/* Inner Luxury Certificate Frame */}
-              <div className="bg-[#120d09] rounded-[22px] p-6 sm:p-8 space-y-6 relative overflow-hidden text-[#fcf8f2] border border-orange-500/20">
-                {/* Guilloche Corner Accents */}
-                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400/60" />
-                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400/60" />
-                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-400/60" />
-                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-400/60" />
+              <div className="bg-[#111714] rounded-[22px] p-6 sm:p-8 space-y-6 relative overflow-hidden text-[#F5F0E5] border border-[#344236]">
+                {/* Guilloche Corner Accents (Champagne Gold) */}
+                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-[#C6AC7D]/60" />
+                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-[#C6AC7D]/60" />
+                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-[#C6AC7D]/60" />
+                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-[#C6AC7D]/60" />
 
                 {/* Certificate Header */}
-                <div className="text-center space-y-1.5 border-b border-orange-500/15 pb-5">
-                  <div className="text-[10px] font-mono tracking-[0.28em] text-orange-400 uppercase font-bold">
+                <div className="text-center space-y-1.5 border-b border-[#344236] pb-5">
+                  <div className="text-[10px] font-mono tracking-[0.28em] text-[#C6AC7D] uppercase font-bold">
                     GFG — GAP FOR GOOD
                   </div>
-                  <h4 className="font-serif text-xl sm:text-2xl text-[#fef9f2] tracking-wider uppercase font-light">
+                  <h4 className="font-serif text-xl sm:text-2xl text-[#F5F0E5] tracking-wider uppercase font-light">
                     Certificate of Achievement
                   </h4>
-                  <p className="text-[11px] text-[#9a8c80] italic font-serif">
-                    Authentic Credential Issued by the GFG Governance Board
+                  <p className="text-[11px] text-[#AAB9A9] italic font-serif">
+                    Authentic Credential Issued by GFG Governance Board
                   </p>
                 </div>
 
                 {/* Recipient Presentation */}
                 <div className="text-center space-y-2 py-2">
-                  <div className="text-[10px] font-mono uppercase tracking-widest text-[#8c7d71]">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-[#AAB9A9]">
                     This is proudly presented to:
                   </div>
-                  <div className="text-2xl sm:text-3xl font-serif text-gradient-amber italic tracking-wide">
+                  <div className="text-2xl sm:text-3xl font-serif text-[#C6AC7D] italic tracking-wide">
                     Ananya Raman
                   </div>
-                  <div className="text-xs text-[#c9b9aa] max-w-xs mx-auto font-light">
+                  <div className="text-xs text-[#AAB9A9] max-w-xs mx-auto font-light">
                     for meeting all completion criteria and demonstrating mastery in:
                   </div>
-                  <div className="text-sm font-semibold text-[#fcf8f2] pt-1">
+                  <div className="text-sm font-semibold text-[#F5F0E5] pt-1">
                     {currentCourse.title}
                   </div>
                 </div>
 
                 {/* Verification Box & QR Code Mockup */}
-                <div className="p-4 rounded-xl bg-[#0c0805] border border-orange-500/20 flex items-center justify-between gap-4">
+                <div className="p-4 rounded-xl bg-[#0B0F0D] border border-[#344236] flex items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="text-[9px] font-mono uppercase tracking-widest text-orange-400">
+                    <div className="text-[9px] font-mono uppercase tracking-widest text-[#B6C899]">
                       Credential ID:
                     </div>
-                    <div className="font-mono text-xs text-amber-200 font-bold tracking-wider">
+                    <div className="font-mono text-xs text-[#F5F0E5] font-bold tracking-wider">
                       {currentCourse.credentialCode}
                     </div>
-                    <div className="text-[10px] text-[#7d7065]">
+                    <div className="text-[10px] text-[#AAB9A9]">
                       Server-Evaluated • DPDP Compliant
                     </div>
                   </div>
 
                   <div className="w-14 h-14 rounded-lg bg-white p-1 flex items-center justify-center shrink-0 shadow-md">
-                    <QrCode className="w-12 h-12 text-[#111111]" />
+                    <QrCode className="w-12 h-12 text-[#0B0F0D]" />
                   </div>
                 </div>
 
@@ -266,7 +266,7 @@ export function LearningHubShowcase({ onOpenLearningHub }: LearningHubShowcasePr
                     href={`/verify/${currentCourse.credentialCode}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-mono text-orange-400 hover:text-amber-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-mono text-[#B6C899] hover:underline transition-colors"
                   >
                     <span>Inspect Public Verification Page</span>
                     <ExternalLink className="w-3.5 h-3.5" />

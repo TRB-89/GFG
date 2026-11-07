@@ -254,7 +254,7 @@ export function AdaptiveRoadmapModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="roadmap-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#0E1310]/85 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#0B0F0D]/90 backdrop-blur-xl backdrop-blur-md overflow-y-auto"
     >
       <div className="relative w-full max-w-5xl bg-[#1B231E] border border-[#344236] rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden text-[#F5F0E5] font-sans">
         {/* HEADER */}
@@ -321,7 +321,7 @@ export function AdaptiveRoadmapModal({
         </div>
 
         {/* CONTROLS BAR: VARIANT SWITCHER & PACING */}
-        <div className="px-6 py-3 bg-[#171F1A] border-b border-[#344236] flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div className="px-6 py-3 bg-[#111714] border-b border-[#344236] flex flex-wrap items-center justify-between gap-4 text-xs">
           {/* Variant Selector */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-[#AAB9A9] font-mono mr-1">Track:</span>
@@ -366,7 +366,7 @@ export function AdaptiveRoadmapModal({
         {/* PROGRESS & NON-JUDGMENTAL BANNER */}
         <div className="px-6 py-3 bg-[#202A23] border-b border-[#344236] flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-28 bg-[#171F1A] h-2.5 rounded-full overflow-hidden border border-[#344236]">
+            <div className="w-28 bg-[#111714] h-2.5 rounded-full overflow-hidden border border-[#344236]">
               <div
                 className="bg-[#B6C899] h-full transition-all duration-500"
                 style={{ width: `${completionPercentage}%` }}
@@ -392,7 +392,7 @@ export function AdaptiveRoadmapModal({
               statusMessage.type === "success"
                 ? "bg-[#202A23] border border-[#B6C899] text-[#F5F0E5]"
                 : statusMessage.type === "info"
-                ? "bg-[#202A23] border border-[#697D69] text-[#AAB9A9]"
+                ? "bg-[#202A23] border border-[#536B58] text-[#AAB9A9]"
                 : "bg-red-950/60 border border-red-800 text-red-200"
             }`}
           >
@@ -409,7 +409,7 @@ export function AdaptiveRoadmapModal({
               <p className="text-xs text-[#AAB9A9]">Calibrating 8-week structured roadmap...</p>
             </div>
           ) : !roadmap || !roadmap.weeks_data || roadmap.weeks_data.length === 0 ? (
-            <div className="p-8 text-center bg-[#171F1A] rounded-xl border border-[#344236] space-y-3">
+            <div className="p-8 text-center bg-[#111714] rounded-xl border border-[#344236] space-y-3">
               <Compass className="w-8 h-8 text-[#B6C899] mx-auto opacity-70" />
               <h3 className="text-sm font-bold text-[#F5F0E5]">No Roadmap Generated Yet</h3>
               <p className="text-xs text-[#AAB9A9] max-w-md mx-auto">
@@ -436,10 +436,10 @@ export function AdaptiveRoadmapModal({
                   key={weekData.week}
                   className={`rounded-xl border transition-all ${
                     isWeekComplete
-                      ? "bg-[#171F1A] border-[#344236]"
+                      ? "bg-[#111714] border-[#344236]"
                       : isExpanded
                       ? "bg-[#202A23] border-[#B6C899]/50 shadow-md"
-                      : "bg-[#171F1A] border-[#344236] hover:border-[#697D69]"
+                      : "bg-[#111714] border-[#344236] hover:border-[#536B58]"
                   }`}
                 >
                   {/* Week Header Accordion Toggle */}
@@ -464,7 +464,7 @@ export function AdaptiveRoadmapModal({
                           <span className="text-[10px] font-mono uppercase text-[#B6C899]">
                             Week {weekData.week}
                           </span>
-                          <span className="text-xs text-[#697D69]">•</span>
+                          <span className="text-xs text-[#536B58]">•</span>
                           <span className="text-xs text-[#AAB9A9]">
                             {weekCompletedCount}/{weekData.tasks.length} Done
                           </span>
@@ -510,7 +510,7 @@ export function AdaptiveRoadmapModal({
                               key={task.id}
                               className={`p-3 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                                 isDone
-                                  ? "bg-[#171F1A] border-[#344236] opacity-90"
+                                  ? "bg-[#111714] border-[#344236] opacity-90"
                                   : "bg-[#202A23] border-[#344236]"
                               }`}
                             >
@@ -523,7 +523,7 @@ export function AdaptiveRoadmapModal({
                                   {isDone ? (
                                     <CheckCircle2 className="w-5 h-5 fill-[#B6C899] text-[#111714]" />
                                   ) : (
-                                    <Circle className="w-5 h-5 text-[#697D69] hover:text-[#B6C899]" />
+                                    <Circle className="w-5 h-5 text-[#536B58] hover:text-[#B6C899]" />
                                   )}
                                 </button>
 
@@ -538,7 +538,7 @@ export function AdaptiveRoadmapModal({
                                     >
                                       {task.title}
                                     </span>
-                                    <span className="text-[10px] font-mono text-[#697D69] px-1.5 py-0.2 rounded bg-[#111714] border border-[#344236]">
+                                    <span className="text-[10px] font-mono text-[#536B58] px-1.5 py-0.2 rounded bg-[#111714] border border-[#344236]">
                                       ~{task.estimated_hours}h
                                     </span>
                                   </div>
@@ -570,7 +570,7 @@ export function AdaptiveRoadmapModal({
                                     setEvidenceUrl(task.evidence_url || "");
                                     setTaskNotes(task.notes || "");
                                   }}
-                                  className="px-2.5 py-1 bg-[#171F1A] hover:bg-[#344236] text-[11px] text-[#B6C899] rounded-lg border border-[#344236] transition-colors"
+                                  className="px-2.5 py-1 bg-[#111714] hover:bg-[#344236] text-[11px] text-[#B6C899] rounded-lg border border-[#344236] transition-colors"
                                 >
                                   {task.evidence_url ? "Edit Proof" : "Attach Work Sample"}
                                 </button>
@@ -589,7 +589,7 @@ export function AdaptiveRoadmapModal({
 
         {/* EVIDENCE MODAL */}
         {selectedTask && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0E1310]/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B0F0D]/90 backdrop-blur-xl backdrop-blur-sm">
             <div className="w-full max-w-lg bg-[#1B231E] border border-[#344236] rounded-2xl p-6 shadow-2xl space-y-4 text-[#F5F0E5]">
               <div className="flex items-center justify-between">
                 <div>
@@ -616,7 +616,7 @@ export function AdaptiveRoadmapModal({
                   value={evidenceUrl}
                   onChange={(e) => setEvidenceUrl(e.target.value)}
                   placeholder="https://github.com/your-repo or Google Doc / Loom"
-                  className="w-full px-3 py-2 bg-[#171F1A] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
+                  className="w-full px-3 py-2 bg-[#111714] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                 />
               </div>
 
@@ -629,7 +629,7 @@ export function AdaptiveRoadmapModal({
                   value={taskNotes}
                   onChange={(e) => setTaskNotes(e.target.value)}
                   placeholder="What did this project demonstrate? What went smoothly?"
-                  className="w-full px-3 py-2 bg-[#171F1A] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
+                  className="w-full px-3 py-2 bg-[#111714] border border-[#344236] rounded-xl text-xs text-[#F5F0E5] focus:outline-none focus:border-[#B6C899]"
                 />
               </div>
 

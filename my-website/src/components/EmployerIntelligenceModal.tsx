@@ -309,14 +309,14 @@ export default function EmployerIntelligenceModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="employer-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 md:p-6 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B0F0D]/90 backdrop-blur-xl p-3 md:p-6 overflow-y-auto"
     >
-      <div className="relative w-full max-w-6xl bg-[#111714] border border-[#344236] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-        {/* Top Fictional Demo & Security Banner */}
-        <div className="bg-[#161F19] border-b border-[#2C382F] px-5 py-2.5 flex items-center justify-between text-xs text-[#AAB9A9]">
+      <div className="relative w-full max-w-6xl bg-[#111714] border border-[#344236] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        {/* Top Security & Compliance Banner */}
+        <div className="bg-[#1B231E] border-b border-[#344236] px-5 py-2.5 flex items-center justify-between text-xs text-[#AAB9A9]">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#202B23] text-[#B6C899] font-medium border border-[#3E4F41]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#B6C899] animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#111714] text-[#C6AC7D] font-medium border border-[#C6AC7D]/40 font-mono text-[10px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C6AC7D] animate-pulse" />
               VERIFIED EMPLOYER WORKSPACE
             </span>
             <span className="font-serif text-[#F5F0E5]">
